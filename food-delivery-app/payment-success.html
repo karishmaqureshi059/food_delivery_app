@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Successful - FoodExpress</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .success-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f5f6fa;
+      padding: 20px;
+    }
+    .success-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+      max-width: 500px;
+      width: 100%;
+      padding: 40px;
+      text-align: center;
+    }
+    .success-icon {
+      width: 100px;
+      height: 100px;
+      background: #d4edda;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 48px;
+      color: #28a745;
+      animation: scaleIn 0.5s ease;
+    }
+    @keyframes scaleIn {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+    .order-details {
+      background: var(--light);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 24px 0;
+      text-align: left;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="success-container">
+    <div class="success-card">
+      <div class="success-icon">✓</div>
+      <h1 style="font-size: 28px; font-weight: 800; margin-bottom: 8px;">Payment Successful!</h1>
+      <p style="color: var(--gray);">Your order has been placed successfully</p>
+
+      <div class="order-details" id="order-details">
+        <!-- Order details loaded via JS -->
+      </div>
+
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <a href="tracking.html" class="btn btn-primary" id="track-btn">Track Order</a>
+        <a href="home.html" class="btn btn-outline">Back to Home</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    // Require authentication
+    Auth.requireAuth();
+
+    function loadOrderDetails() {
+      const orderId = Utils.getQueryParam('orderId');
+      if (!orderId) {
+        window.location.href = 'home.html';
+        return;
+      }
+
+      const order = DB.findById('orders', orderId);
+      if (!order) {
+        window.location.href = 'home.html';
+        return;
+      }
+
+      const restaurant = DB.findById('restaurants', order.restaurantId);
+
+      document.getElementById('order-details').innerHTML = `
+        <div class="detail-row">
+          <span style="color: var(--gray);">Order ID</span>
+          <strong>#${order.id.slice(-6).toUpperCase()}</strong>
+        </div>
+        <div class="detail-row">
+          <span style="color: var(--gray);">Restaurant</span>
+          <strong>${restaurant ? restaurant.name : 'N/A'}</strong>
+        </div>
+        <div class="detail-row">
+          <span style="color: var(--gray);">Amount Paid</span>
+          <strong style="color: var(--success);">$${order.total.toFixed(2)}</strong>
+        </div>
+        <div class="detail-row">
+          <span style="color: var(--gray);">Payment Method</span>
+          <strong>${order.paymentMethod.toUpperCase()}</strong>
+        </div>
+        <div class="detail-row">
+          <span style="color: var(--gray);">Estimated Delivery</span>
+          <strong>${restaurant ? restaurant.deliveryTime : '30-45 min'}</strong>
+        </div>
+      `;
+
+      document.getElementById('track-btn').href = 'tracking.html?orderId=' + order.id;
+    }
+
+    document.addEventListener('DOMContentLoaded', loadOrderDetails);
+  </script>
+</body>
+</html>

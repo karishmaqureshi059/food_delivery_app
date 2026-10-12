@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout - FoodExpress</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="index.html" class="navbar-brand">
+        <span>🍔</span> FoodExpress
+      </a>
+      <div class="navbar-actions">
+        <a href="cart.html" class="navbar-link">Back to Cart</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="checkout-container">
+    <h1 style="margin-bottom: 24px;">Checkout</h1>
+
+    <div class="checkout-grid">
+      <div>
+        <!-- Delivery Address -->
+        <div class="checkout-section">
+          <h3>📍 Delivery Address</h3>
+          <div id="address-list">
+            <!-- Addresses loaded via JS -->
+          </div>
+          <button class="btn btn-outline btn-sm mt-2" onclick="openAddressModal()">+ Add New Address</button>
+        </div>
+
+        <!-- Delivery Instructions -->
+        <div class="checkout-section">
+          <h3>📝 Delivery Instructions</h3>
+          <div class="form-group">
+            <textarea class="form-textarea" id="delivery-instructions" placeholder="e.g., Ring the doorbell, leave at door, etc."></textarea>
+          </div>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="checkout-section">
+          <h3>💳 Payment Method</h3>
+          <div class="payment-method selected" id="pay-upi" onclick="selectPayment('upi')">
+            <span class="payment-icon">📱</span>
+            <div>
+              <strong>UPI</strong>
+              <p style="font-size: 13px; color: var(--gray);">Pay using Google Pay, PhonePe, etc.</p>
+            </div>
+          </div>
+          <div class="payment-method" id="pay-card" onclick="selectPayment('card')">
+            <span class="payment-icon">💳</span>
+            <div>
+              <strong>Credit/Debit Card</strong>
+              <p style="font-size: 13px; color: var(--gray);">Visa, Mastercard, Amex</p>
+            </div>
+          </div>
+          <div class="payment-method" id="pay-cod" onclick="selectPayment('cod')">
+            <span class="payment-icon">💵</span>
+            <div>
+              <strong>Cash on Delivery</strong>
+              <p style="font-size: 13px; color: var(--gray);">Pay when your order arrives</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div>
+        <div class="checkout-section" style="position: sticky; top: 90px;">
+          <h3>📋 Order Summary</h3>
+          <div id="order-summary">
+            <!-- Summary loaded via JS -->
+          </div>
+          <button class="btn btn-primary btn-block btn-lg mt-3" onclick="placeOrder()">
+            Place Order - $<span id="checkout-total">0</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Address Modal -->
+  <div class="modal-overlay" id="address-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Add New Address</h3>
+        <button class="modal-close" onclick="closeAddressModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Label</label>
+          <select class="form-select" id="addr-label">
+            <option value="Home">Home</option>
+            <option value="Work">Work</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Street Address</label>
+          <input type="text" class="form-input" id="addr-street" placeholder="Street address">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">City</label>
+            <input type="text" class="form-input" id="addr-city" placeholder="City">
+          </div>
+          <div class="form-group">
+            <label class="form-label">State</label>
+            <input type="text" class="form-input" id="addr-state" placeholder="State">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ZIP Code</label>
+          <input type="text" class="form-input" id="addr-zip" placeholder="ZIP code">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeAddressModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveAddress()">Save Address</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Modal -->
+  <div class="modal-overlay" id="payment-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Payment</h3>
+        <button class="modal-close" onclick="closePaymentModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="payment-content">
+        <!-- Payment form loaded via JS -->
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/cart.js"></script>
+  <script>
+    let selectedAddress = null;
+    let selectedPayment = 'upi';
+    let orderData = null;
+
+    // Require authentication
+    Auth.requireAuth();
+
+    // Load checkout data
+    function loadCheckout() {
+      const cart = Cart.getCart();
+      if (cart.length === 0) {
+        window.location.href = 'cart.html';
+        return;
+      }
+
+      const user = Auth.getCurrentUser();
+      const restaurant = DB.findById('restaurants', cart[0].restaurantId);
+      const subtotal = Cart.getTotal();
+      const deliveryFee = restaurant ? restaurant.deliveryFee : 0;
+      const tax = subtotal * 0.08;
+      const total = subtotal + deliveryFee + tax;
+
+      // Load addresses
+      const addressList = document.getElementById('address-list');
+      if (user.addresses && user.addresses.length > 0) {
+        addressList.innerHTML = user.addresses.map((addr, index) => `
+          <div class="address-card ${index === 0 ? 'selected' : ''}" onclick="selectAddress(${index})">
+            <div class="address-label">${addr.label}</div>
+            <div class="address-text">${addr.street}, ${addr.city}, ${addr.state} ${addr.zip}</div>
+          </div>
+        `).join('');
+        selectedAddress = user.addresses[0];
+      } else {
+        addressList.innerHTML = '<p style="color: var(--gray);">No saved addresses. Please add one.</p>';
+      }
+
+      // Load order summary
+      document.getElementById('order-summary').innerHTML = `
+        <div class="order-items">
+          ${cart.map(item => {
+            let itemTotal = item.price * item.quantity;
+            item.customization.forEach(c => { if (c.price) itemTotal += c.price * item.quantity; });
+            return `
+              <div class="order-item">
+                <span>${item.quantity}x ${item.name}</span>
+                <span>$${itemTotal.toFixed(2)}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Subtotal</span>
+          <span class="summary-value">$${subtotal.toFixed(2)}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Delivery Fee</span>
+          <span class="summary-value">${deliveryFee === 0 ? 'Free' : '$' + deliveryFee.toFixed(2)}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Taxes</span>
+          <span class="summary-value">$${tax.toFixed(2)}</span>
+        </div>
+        <div class="summary-row" style="border-top: 2px solid var(--border); margin-top: 12px; padding-top: 16px;">
+          <span class="summary-label" style="font-weight: 700;">Total</span>
+          <span class="summary-value summary-total">$${total.toFixed(2)}</span>
+        </div>
+      `;
+
+      document.getElementById('checkout-total').textContent = total.toFixed(2);
+
+      // Prepare order data
+      orderData = {
+        userId: user.id,
+        restaurantId: cart[0].restaurantId,
+        items: cart,
+        subtotal,
+        deliveryFee,
+        tax,
+        total,
+        deliveryInstructions: ''
+      };
+    }
+
+    // Select address
+    function selectAddress(index) {
+      const user = Auth.getCurrentUser();
+      selectedAddress = user.addresses[index];
+      document.querySelectorAll('.address-card').forEach((card, i) => {
+        card.classList.toggle('selected', i === index);
+      });
+    }
+
+    // Open address modal
+    function openAddressModal() {
+      Utils.showModal('address-modal');
+    }
+
+    // Close address modal
+    function closeAddressModal() {
+      Utils.hideModal('address-modal');
+    }
+
+    // Save address
+    function saveAddress() {
+      const label = document.getElementById('addr-label').value;
+      const street = document.getElementById('addr-street').value;
+      const city = document.getElementById('addr-city').value;
+      const state = document.getElementById('addr-state').value;
+      const zip = document.getElementById('addr-zip').value;
+
+      if (!street || !city || !state || !zip) {
+        Utils.toast('Please fill all fields', 'error');
+        return;
+      }
+
+      const user = Auth.getCurrentUser();
+      const newAddress = { id: DB.generateId(), label, street, city, state, zip };
+      user.addresses.push(newAddress);
+      DB.update('users', user.id, { addresses: user.addresses });
+
+      Utils.toast('Address saved!');
+      closeAddressModal();
+      loadCheckout();
+    }
+
+    // Select payment
+    function selectPayment(method) {
+      selectedPayment = method;
+      document.querySelectorAll('.payment-method').forEach(el => el.classList.remove('selected'));
+      document.getElementById('pay-' + method).classList.add('selected');
+    }
+
+    // Place order
+    function placeOrder() {
+      if (!selectedAddress) {
+        Utils.toast('Please select a delivery address', 'error');
+        return;
+      }
+
+      orderData.deliveryAddress = selectedAddress;
+      orderData.deliveryInstructions = document.getElementById('delivery-instructions').value;
+      orderData.paymentMethod = selectedPayment;
+
+      // Show payment modal
+      showPaymentModal();
+    }
+
+    // Show payment modal
+    function showPaymentModal() {
+      const content = document.getElementById('payment-content');
+
+      if (selectedPayment === 'upi') {
+        content.innerHTML = `
+          <div class="form-group">
+            <label class="form-label">UPI ID</label>
+            <input type="text" class="form-input" id="upi-id" placeholder="yourname@upi">
+          </div>
+          <button class="btn btn-primary btn-block btn-lg" onclick="processPayment()">Pay $${orderData.total.toFixed(2)}</button>
+        `;
+      } else if (selectedPayment === 'card') {
+        content.innerHTML = `
+          <div class="form-group">
+            <label class="form-label">Card Number</label>
+            <input type="text" class="form-input" id="card-number" placeholder="1234 5678 9012 3456" maxlength="19">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">Expiry</label>
+              <input type="text" class="form-input" id="card-expiry" placeholder="MM/YY" maxlength="5">
+            </div>
+            <div class="form-group">
+              <label class="form-label">CVV</label>
+              <input type="password" class="form-input" id="card-cvv" placeholder="123" maxlength="3">
+            </div>
+          </div>
+          <button class="btn btn-primary btn-block btn-lg" onclick="processPayment()">Pay $${orderData.total.toFixed(2)}</button>
+        `;
+      } else {
+        content.innerHTML = `
+          <div style="text-align: center; padding: 20px;">
+            <div style="font-size: 48px; margin-bottom: 16px;">💵</div>
+            <h3>Cash on Delivery</h3>
+            <p style="color: var(--gray); margin: 12px 0;">Pay $${orderData.total.toFixed(2)} when your order arrives</p>
+            <button class="btn btn-primary btn-block btn-lg" onclick="processPayment()">Confirm Order</button>
+          </div>
+        `;
+      }
+
+      Utils.showModal('payment-modal');
+    }
+
+    // Close payment modal
+    function closePaymentModal() {
+      Utils.hideModal('payment-modal');
+    }
+
+    // Process payment
+    function processPayment() {
+      // Simulate payment processing
+      const success = Math.random() > 0.1; // 90% success rate
+
+      if (success) {
+        // Create order
+        const order = DB.insert('orders', {
+          ...orderData,
+          status: 'pending',
+          paymentStatus: selectedPayment === 'cod' ? 'pending' : 'paid',
+          rating: null,
+          review: null
+        });
+
+        // Create payment record
+        DB.insert('payments', {
+          orderId: order.id,
+          userId: orderData.userId,
+          amount: orderData.total,
+          method: selectedPayment,
+          status: selectedPayment === 'cod' ? 'pending' : 'success',
+          transactionId: selectedPayment === 'cod' ? null : 'TXN' + Date.now()
+        });
+
+        // Create notification
+        DB.insert('notifications', {
+          userId: orderData.userId,
+          title: 'Order Placed',
+          message: `Your order #${order.id.slice(-6)} has been placed successfully!`,
+          type: 'order',
+          isRead: false
+        });
+
+        // Clear cart
+        Cart.clearCart();
+
+        // Show success
+        closePaymentModal();
+        window.location.href = 'payment-success.html?orderId=' + order.id;
+      } else {
+        // Payment failed
+        DB.insert('payments', {
+          orderId: null,
+          userId: orderData.userId,
+          amount: orderData.total,
+          method: selectedPayment,
+          status: 'failed',
+          transactionId: null
+        });
+
+        closePaymentModal();
+        window.location.href = 'payment-failed.html';
+      }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCheckout();
+    });
+  </script>
+</body>
+</html>

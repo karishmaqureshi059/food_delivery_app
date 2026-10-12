@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - FoodExpress</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+      <div class="admin-sidebar-header">
+        <span class="admin-sidebar-logo">⚙️</span>
+        <span class="admin-sidebar-title">Admin Panel</span>
+      </div>
+      <nav class="admin-nav">
+        <div class="admin-nav-section">Main</div>
+        <div class="admin-nav-item active" onclick="location.href='admin-dashboard.html'">
+          <span class="admin-nav-icon">📊</span> Dashboard
+        </div>
+        <div class="admin-nav-section">Management</div>
+        <div class="admin-nav-item" onclick="location.href='admin-users.html'">
+          <span class="admin-nav-icon">👥</span> Users
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-restaurants.html'">
+          <span class="admin-nav-icon">🏪</span> Restaurants
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-food.html'">
+          <span class="admin-nav-icon">🍽️</span> Food / Menu
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-orders.html'">
+          <span class="admin-nav-icon">📋</span> Orders
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-delivery.html'">
+          <span class="admin-nav-icon">🚗</span> Delivery Partners
+        </div>
+        <div class="admin-nav-section">Business</div>
+        <div class="admin-nav-item" onclick="location.href='admin-payments.html'">
+          <span class="admin-nav-icon">💳</span> Payments
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-reviews.html'">
+          <span class="admin-nav-icon">⭐</span> Reviews
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-coupons.html'">
+          <span class="admin-nav-icon">🎫</span> Coupons & Offers
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-notifications.html'">
+          <span class="admin-nav-icon">🔔</span> Notifications
+        </div>
+        <div class="admin-nav-section">Analytics</div>
+        <div class="admin-nav-item" onclick="location.href='admin-reports.html'">
+          <span class="admin-nav-icon">📈</span> Reports
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-analytics.html'">
+          <span class="admin-nav-icon">📉</span> Revenue & Analytics
+        </div>
+        <div class="admin-nav-section">Settings</div>
+        <div class="admin-nav-item" onclick="location.href='admin-settings.html'">
+          <span class="admin-nav-icon">⚙️</span> Settings
+        </div>
+        <div class="admin-nav-item" onclick="Auth.adminLogout()">
+          <span class="admin-nav-icon">🚪</span> Logout
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <div class="admin-topbar">
+        <h1 class="admin-topbar-title">Dashboard</h1>
+        <div class="admin-topbar-actions">
+          <span id="admin-name" style="font-weight: 600;"></span>
+          <img src="" alt="Admin" id="admin-avatar" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+        </div>
+      </div>
+
+      <div class="admin-content">
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon blue">👥</div>
+            <div class="stat-info">
+              <h3 id="stat-users">0</h3>
+              <p>Total Users</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green">🏪</div>
+            <div class="stat-info">
+              <h3 id="stat-restaurants">0</h3>
+              <p>Total Restaurants</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon orange">📋</div>
+            <div class="stat-info">
+              <h3 id="stat-orders">0</h3>
+              <p>Total Orders</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon purple">💰</div>
+            <div class="stat-info">
+              <h3 id="stat-revenue">$0</h3>
+              <p>Total Revenue</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px;">
+          <div class="chart-container">
+            <h3 class="chart-title">Revenue Overview</h3>
+            <div class="chart-placeholder">
+              <div style="text-align: center;">
+                <div style="font-size: 48px; margin-bottom: 12px;">📈</div>
+                <p>Revenue chart would display here</p>
+                <p style="font-size: 13px; margin-top: 8px;">Daily, Weekly, Monthly trends</p>
+              </div>
+            </div>
+          </div>
+          <div class="chart-container">
+            <h3 class="chart-title">Order Status</h3>
+            <div class="chart-placeholder">
+              <div style="text-align: center;">
+                <div style="font-size: 48px; margin-bottom: 12px;">📊</div>
+                <p>Order distribution chart</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Orders & Top Restaurants -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+          <div class="admin-table-container">
+            <div class="admin-table-header">
+              <h3 class="admin-table-title">Recent Orders</h3>
+              <a href="admin-orders.html" class="btn btn-sm btn-outline">View All</a>
+            </div>
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Restaurant</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recent-orders">
+                <!-- Loaded via JS -->
+              </tbody>
+            </table>
+          </div>
+          <div class="admin-table-container">
+            <div class="admin-table-header">
+              <h3 class="admin-table-title">Top Restaurants</h3>
+            </div>
+            <div style="padding: 20px;" id="top-restaurants">
+              <!-- Loaded via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    Auth.requireAdmin();
+
+    function loadDashboard() {
+      const admin = Auth.getCurrentAdmin();
+      if (admin) {
+        document.getElementById('admin-name').textContent = admin.name;
+        document.getElementById('admin-avatar').src = admin.avatar;
+      }
+
+      // Load stats
+      const users = DB.collection('users').length;
+      const restaurants = DB.collection('restaurants').length;
+      const orders = DB.collection('orders').length;
+      const revenue = DB.collection('payments')
+        .filter(p => p.status === 'success')
+        .reduce((sum, p) => sum + p.amount, 0);
+
+      document.getElementById('stat-users').textContent = users;
+      document.getElementById('stat-restaurants').textContent = restaurants;
+      document.getElementById('stat-orders').textContent = orders;
+      document.getElementById('stat-revenue').textContent = '$' + revenue.toFixed(2);
+
+      // Load recent orders
+      const recentOrders = DB.collection('orders').slice(-5).reverse();
+      document.getElementById('recent-orders').innerHTML = recentOrders.map(order => {
+        const user = DB.findById('users', order.userId);
+        const restaurant = DB.findById('restaurants', order.restaurantId);
+        const statusColor = Utils.getStatusColor(order.status);
+        return `
+          <tr>
+            <td>#${order.id.slice(-6).toUpperCase()}</td>
+            <td>${user ? user.name : 'N/A'}</td>
+            <td>${restaurant ? restaurant.name : 'N/A'}</td>
+            <td>$${order.total.toFixed(2)}</td>
+            <td><span class="status-badge" style="background: ${statusColor}20; color: ${statusColor};">${Utils.getStatusLabel(order.status)}</span></td>
+          </tr>
+        `;
+      }).join('');
+
+      // Load top restaurants
+      const topRestaurants = DB.collection('restaurants')
+        .sort((a, b) => b.rating - a.rating)
+        .slice(0, 5);
+      document.getElementById('top-restaurants').innerHTML = topRestaurants.map(rest => `
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border);">
+          <img src="${rest.image}" alt="${rest.name}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;">
+          <div style="flex: 1;">
+            <strong>${rest.name}</strong>
+            <p style="font-size: 12px; color: var(--gray);">★ ${rest.rating} (${rest.reviewCount} reviews)</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+  </script>
+</body>
+</html>

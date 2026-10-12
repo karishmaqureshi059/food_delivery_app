@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - FoodExpress</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .auth-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #ff6b35 0%, #e55a2b 100%);
+      padding: 20px;
+    }
+    .auth-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 450px;
+      padding: 40px;
+    }
+    .auth-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .auth-logo {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+    .auth-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--dark);
+    }
+    .auth-subtitle {
+      color: var(--gray);
+      margin-top: 8px;
+    }
+    .auth-footer {
+      text-align: center;
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .social-login {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .social-btn {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: var(--transition);
+    }
+    .social-btn:hover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+    .otp-inputs {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    .otp-input {
+      width: 50px;
+      height: 50px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .otp-input:focus {
+      border-color: var(--primary);
+      outline: none;
+    }
+    .step-content {
+      display: none;
+    }
+    .step-content.active {
+      display: block;
+    }
+    .step-indicator {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .step-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: var(--transition);
+    }
+    .step-dot.active {
+      background: var(--primary);
+      width: 30px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-logo">🍔</div>
+        <h1 class="auth-title">Create Account</h1>
+        <p class="auth-subtitle">Join FoodExpress and start ordering</p>
+      </div>
+
+      <div class="step-indicator">
+        <div class="step-dot active" id="dot-1"></div>
+        <div class="step-dot" id="dot-2"></div>
+        <div class="step-dot" id="dot-3"></div>
+      </div>
+
+      <!-- Step 1: Personal Info -->
+      <div class="step-content active" id="step-1">
+        <form onsubmit="goToStep2(event)">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-input" id="signup-name" placeholder="Enter your full name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-input" id="signup-email" placeholder="Enter your email" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" class="form-input" id="signup-phone" placeholder="+1234567890" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-input" id="signup-password" placeholder="Create a password" required minlength="6">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm Password</label>
+            <input type="password" class="form-input" id="signup-confirm" placeholder="Confirm your password" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg">Continue</button>
+        </form>
+      </div>
+
+      <!-- Step 2: OTP Verification -->
+      <div class="step-content" id="step-2">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="font-size: 48px; margin-bottom: 16px;">📱</div>
+          <h3>Verify Your Phone</h3>
+          <p style="color: var(--gray); margin-top: 8px;">We've sent a 6-digit code to <span id="otp-phone"></span></p>
+        </div>
+        <div class="otp-inputs">
+          <input type="text" class="otp-input" maxlength="1" onkeyup="moveToNext(this, 1)">
+          <input type="text" class="otp-input" maxlength="1" onkeyup="moveToNext(this, 2)">
+          <input type="text" class="otp-input" maxlength="1" onkeyup="moveToNext(this, 3)">
+          <input type="text" class="otp-input" maxlength="1" onkeyup="moveToNext(this, 4)">
+          <input type="text" class="otp-input" maxlength="1" onkeyup="moveToNext(this, 5)">
+          <input type="text" class="otp-input" maxlength="1" onkeyup="moveToNext(this, 6)">
+        </div>
+        <button class="btn btn-primary btn-block btn-lg" onclick="verifyOTP()">Verify & Continue</button>
+        <p style="text-align: center; margin-top: 16px; color: var(--gray); font-size: 14px;">
+          Didn't receive code? <a href="#" onclick="resendOTP()" style="color: var(--primary); font-weight: 600;">Resend</a>
+        </p>
+      </div>
+
+      <!-- Step 3: Success -->
+      <div class="step-content" id="step-3">
+        <div style="text-align: center; padding: 20px 0;">
+          <div style="font-size: 64px; margin-bottom: 16px;">🎉</div>
+          <h3>Account Created!</h3>
+          <p style="color: var(--gray); margin-top: 8px;">Your account has been successfully created.</p>
+          <button class="btn btn-primary btn-lg mt-3" onclick="completeSignup()">Start Ordering</button>
+        </div>
+      </div>
+
+      <div class="social-login">
+        <button class="social-btn" onclick="googleSignup()">
+          <i class="fab fa-google" style="color: #db4437;"></i> Google
+        </button>
+        <button class="social-btn" onclick="facebookSignup()">
+          <i class="fab fa-facebook" style="color: #4267B2;"></i> Facebook
+        </button>
+      </div>
+
+      <div class="auth-footer">
+        <p style="color: var(--gray);">Already have an account? <a href="login.html" style="color: var(--primary); font-weight: 700;">Sign In</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    let formData = {};
+    let generatedOTP = '';
+
+    // Redirect if already logged in
+    Auth.redirectIfLoggedIn();
+
+    function goToStep2(e) {
+      e.preventDefault();
+      const name = document.getElementById('signup-name').value;
+      const email = document.getElementById('signup-email').value;
+      const phone = document.getElementById('signup-phone').value;
+      const password = document.getElementById('signup-password').value;
+      const confirm = document.getElementById('signup-confirm').value;
+
+      if (password !== confirm) {
+        Utils.toast('Passwords do not match', 'error');
+        return;
+      }
+
+      formData = { name, email, phone, password };
+      document.getElementById('otp-phone').textContent = phone;
+      generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      console.log('OTP:', generatedOTP); // In real app, this would be sent via SMS
+
+      showStep(2);
+    }
+
+    function showStep(step) {
+      document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.step-dot').forEach(el => el.classList.remove('active'));
+      document.getElementById('step-' + step).classList.add('active');
+      document.getElementById('dot-' + step).classList.add('active');
+    }
+
+    function moveToNext(input, nextIndex) {
+      if (input.value.length === 1) {
+        const inputs = document.querySelectorAll('.otp-input');
+        if (nextIndex < inputs.length) {
+          inputs[nextIndex].focus();
+        }
+      }
+    }
+
+    function verifyOTP() {
+      const inputs = document.querySelectorAll('.otp-input');
+      let enteredOTP = '';
+      inputs.forEach(input => enteredOTP += input.value);
+
+      if (enteredOTP === generatedOTP) {
+        Utils.toast('Phone verified successfully!');
+        showStep(3);
+      } else {
+        Utils.toast('Invalid OTP. Please try again.', 'error');
+      }
+    }
+
+    function resendOTP() {
+      generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      console.log('New OTP:', generatedOTP);
+      Utils.toast('New OTP sent!');
+    }
+
+    function completeSignup() {
+      const result = Auth.signup(formData.name, formData.email, formData.phone, formData.password);
+      if (result.success) {
+        Utils.toast('Account created successfully!');
+        setTimeout(() => window.location.href = 'home.html', 1500);
+      } else {
+        Utils.toast(result.message, 'error');
+      }
+    }
+
+    function googleSignup() {
+      Utils.toast('Google signup coming soon!', 'info');
+    }
+
+    function facebookSignup() {
+      Utils.toast('Facebook signup coming soon!', 'info');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Failed - FoodExpress</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .failed-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f5f6fa;
+      padding: 20px;
+    }
+    .failed-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+      max-width: 500px;
+      width: 100%;
+      padding: 40px;
+      text-align: center;
+    }
+    .failed-icon {
+      width: 100px;
+      height: 100px;
+      background: #f8d7da;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 48px;
+      color: #dc3545;
+      animation: shake 0.5s ease;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="failed-container">
+    <div class="failed-card">
+      <div class="failed-icon">✕</div>
+      <h1 style="font-size: 28px; font-weight: 800; margin-bottom: 8px;">Payment Failed</h1>
+      <p style="color: var(--gray);">Something went wrong with your payment. Please try again.</p>
+
+      <div style="background: var(--light); border-radius: 12px; padding: 20px; margin: 24px 0; text-align: left;">
+        <p style="font-size: 14px; color: var(--gray);">
+          <strong>Possible reasons:</strong>
+        </p>
+        <ul style="font-size: 14px; color: var(--gray); margin-top: 8px; padding-left: 20px;">
+          <li>Insufficient balance</li>
+          <li>Network connectivity issue</li>
+          <li>Incorrect payment details</li>
+          <li>Transaction timeout</li>
+        </ul>
+      </div>
+
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <a href="checkout.html" class="btn btn-primary">Try Again</a>
+        <a href="home.html" class="btn btn-outline">Back to Home</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    Auth.requireAuth();
+  </script>
+</body>
+</html>

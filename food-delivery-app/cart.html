@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cart - FoodExpress</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="index.html" class="navbar-brand">
+        <span>🍔</span> FoodExpress
+      </a>
+      <div class="navbar-actions">
+        <a href="home.html" class="navbar-link">Back to Home</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="cart-container">
+    <h1 style="margin-bottom: 24px;">Your Cart</h1>
+
+    <div id="cart-content">
+      <!-- Cart content loaded via JS -->
+    </div>
+  </div>
+
+  <!-- Coupon Modal -->
+  <div class="modal-overlay" id="coupon-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Apply Coupon</h3>
+        <button class="modal-close" onclick="closeCouponModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <input type="text" class="form-input" id="coupon-code" placeholder="Enter coupon code">
+        </div>
+        <div id="available-coupons" style="margin-top: 16px;">
+          <h4 style="margin-bottom: 12px;">Available Coupons</h4>
+          <div id="coupon-list">
+            <!-- Coupons loaded via JS -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeCouponModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="applyCoupon()">Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/cart.js"></script>
+  <script>
+    let appliedCoupon = null;
+
+    // Require authentication
+    Auth.requireAuth();
+
+    // Load cart
+    function loadCart() {
+      const cart = Cart.getCart();
+      const container = document.getElementById('cart-content');
+
+      if (cart.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🛒</div>
+            <h3 class="empty-state-title">Your cart is empty</h3>
+            <p class="empty-state-text">Add some delicious items to get started</p>
+            <a href="home.html" class="btn btn-primary">Browse Restaurants</a>
+          </div>
+        `;
+        return;
+      }
+
+      const restaurant = DB.findById('restaurants', cart[0].restaurantId);
+      const subtotal = Cart.getTotal();
+      const deliveryFee = restaurant ? restaurant.deliveryFee : 0;
+      const tax = subtotal * 0.08;
+      let discount = 0;
+
+      if (appliedCoupon) {
+        const coupon = DB.findById('coupons', appliedCoupon);
+        if (coupon) {
+          if (coupon.discountType === 'percentage') {
+            discount = (subtotal * coupon.discountValue) / 100;
+            if (coupon.maxDiscount && discount > coupon.maxDiscount) discount = coupon.maxDiscount;
+          } else if (coupon.discountType === 'flat') {
+            discount = coupon.discountValue;
+          } else if (coupon.discountType === 'free_delivery') {
+            discount = 0;
+          }
+        }
+      }
+
+      const total = subtotal + deliveryFee + tax - discount;
+
+      container.innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 350px; gap: 24px;">
+          <div>
+            <div class="cart-items">
+              <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                <h3>${restaurant ? restaurant.name : 'Restaurant'}</h3>
+                <button class="btn btn-sm btn-outline" onclick="clearCart()">Clear Cart</button>
+              </div>
+              ${cart.map((item, index) => {
+                let itemTotal = item.price * item.quantity;
+                const customText = item.customization.map(c => c.selected).join(', ');
+                item.customization.forEach(c => { if (c.price) itemTotal += c.price * item.quantity; });
+                return `
+                  <div class="cart-item">
+                    <img src="${item.image}" alt="${item.name}" class="cart-item-image">
+                    <div class="cart-item-info">
+                      <h4 class="cart-item-name">${item.name}</h4>
+                      ${customText ? `<p class="cart-item-custom">${customText}</p>` : ''}
+                      <p class="cart-item-price">$${itemTotal.toFixed(2)}</p>
+                    </div>
+                    <div class="quantity-control">
+                      <button class="quantity-btn" onclick="updateItemQuantity(${index}, -1)">-</button>
+                      <span class="quantity-value">${item.quantity}</span>
+                      <button class="quantity-btn" onclick="updateItemQuantity(${index}, 1)">+</button>
+                    </div>
+                    <button class="btn btn-sm btn-danger" onclick="removeItem(${index})" style="margin-left: 12px;">🗑</button>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <div>
+            <div class="cart-summary">
+              <h3 style="margin-bottom: 16px;">Bill Details</h3>
+              <div class="summary-row">
+                <span class="summary-label">Subtotal</span>
+                <span class="summary-value">$${subtotal.toFixed(2)}</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-label">Delivery Fee</span>
+                <span class="summary-value">${deliveryFee === 0 ? 'Free' : '$' + deliveryFee.toFixed(2)}</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-label">Taxes (8%)</span>
+                <span class="summary-value">$${tax.toFixed(2)}</span>
+              </div>
+              ${appliedCoupon ? `
+                <div class="summary-row" style="color: var(--success);">
+                  <span class="summary-label">Discount (${appliedCoupon})</span>
+                  <span class="summary-value">-$${discount.toFixed(2)}</span>
+                </div>
+              ` : ''}
+              <div class="summary-row" style="border-top: 2px solid var(--border); margin-top: 12px; padding-top: 16px;">
+                <span class="summary-label" style="font-weight: 700;">To Pay</span>
+                <span class="summary-value summary-total">$${total.toFixed(2)}</span>
+              </div>
+              <button class="btn btn-outline btn-block mt-3" onclick="openCouponModal()">
+                ${appliedCoupon ? 'Change Coupon' : 'Apply Coupon'}
+              </button>
+              <a href="checkout.html" class="btn btn-primary btn-block mt-2">Proceed to Checkout</a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Update item quantity
+    function updateItemQuantity(index, change) {
+      const cart = Cart.getCart();
+      const item = cart[index];
+      const newQty = item.quantity + change;
+
+      if (newQty <= 0) {
+        cart.splice(index, 1);
+      } else {
+        item.quantity = newQty;
+      }
+
+      Cart.saveCart(cart);
+      loadCart();
+      Cart.updateCartBadge();
+    }
+
+    // Remove item
+    function removeItem(index) {
+      const cart = Cart.getCart();
+      cart.splice(index, 1);
+      Cart.saveCart(cart);
+      loadCart();
+      Cart.updateCartBadge();
+    }
+
+    // Clear cart
+    function clearCart() {
+      if (confirm('Are you sure you want to clear your cart?')) {
+        Cart.clearCart();
+        appliedCoupon = null;
+        loadCart();
+      }
+    }
+
+    // Open coupon modal
+    function openCouponModal() {
+      loadAvailableCoupons();
+      Utils.showModal('coupon-modal');
+    }
+
+    // Close coupon modal
+    function closeCouponModal() {
+      Utils.hideModal('coupon-modal');
+    }
+
+    // Load available coupons
+    function loadAvailableCoupons() {
+      const coupons = DB.filter('coupons', c => c.isActive && new Date(c.expiryDate) > new Date());
+      const list = document.getElementById('coupon-list');
+
+      if (coupons.length === 0) {
+        list.innerHTML = '<p style="color: var(--gray);">No coupons available</p>';
+        return;
+      }
+
+      list.innerHTML = coupons.map(coupon => `
+        <div style="border: 2px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer;" onclick="selectCoupon('${coupon.id}')">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <strong style="color: var(--primary);">${coupon.code}</strong>
+            <span style="font-size: 12px; color: var(--gray);">Min: $${coupon.minOrder}</span>
+          </div>
+          <p style="font-size: 13px; color: var(--gray); margin-top: 4px;">${coupon.description}</p>
+        </div>
+      `).join('');
+    }
+
+    // Select coupon
+    function selectCoupon(couponId) {
+      document.getElementById('coupon-code').value = DB.findById('coupons', couponId).code;
+    }
+
+    // Apply coupon
+    function applyCoupon() {
+      const code = document.getElementById('coupon-code').value.toUpperCase();
+      const coupon = DB.findByField('coupons', 'code', code);
+
+      if (!coupon) {
+        Utils.toast('Invalid coupon code', 'error');
+        return;
+      }
+
+      if (!coupon.isActive) {
+        Utils.toast('This coupon is no longer active', 'error');
+        return;
+      }
+
+      if (new Date(coupon.expiryDate) < new Date()) {
+        Utils.toast('This coupon has expired', 'error');
+        return;
+      }
+
+      const subtotal = Cart.getTotal();
+      if (subtotal < coupon.minOrder) {
+        Utils.toast('Minimum order amount is $' + coupon.minOrder, 'error');
+        return;
+      }
+
+      appliedCoupon = coupon.id;
+      Utils.toast('Coupon applied successfully!');
+      closeCouponModal();
+      loadCart();
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCart();
+      Cart.updateCartBadge();
+    });
+  </script>
+</body>
+</html>

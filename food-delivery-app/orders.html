@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders - FoodExpress</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="index.html" class="navbar-brand">
+        <span>🍔</span> FoodExpress
+      </a>
+      <div class="navbar-actions">
+        <a href="home.html" class="navbar-link">Home</a>
+        <a href="cart.html" class="cart-icon">
+          🛒
+          <span class="cart-badge" id="cart-badge" style="display: none;">0</span>
+        </a>
+        <a href="profile.html" class="user-avatar">
+          <img src="" alt="Profile" id="user-avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="orders-container">
+    <h1 style="margin-bottom: 24px;">My Orders</h1>
+
+    <!-- Tabs -->
+    <div style="display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 2px solid var(--border);">
+      <button class="btn btn-primary btn-sm" id="tab-current" onclick="switchTab('current')">Current Orders</button>
+      <button class="btn btn-outline btn-sm" id="tab-history" onclick="switchTab('history')">Order History</button>
+    </div>
+
+    <div id="orders-list">
+      <!-- Orders loaded via JS -->
+    </div>
+  </div>
+
+  <!-- Review Modal -->
+  <div class="modal-overlay" id="review-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Rate Your Order</h3>
+        <button class="modal-close" onclick="closeReviewModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="review-order-id">
+        <div class="form-group">
+          <label class="form-label">Restaurant Rating</label>
+          <div class="star-rating" id="restaurant-rating">
+            <span onclick="setRating('restaurant', 1)">★</span>
+            <span onclick="setRating('restaurant', 2)">★</span>
+            <span onclick="setRating('restaurant', 3)">★</span>
+            <span onclick="setRating('restaurant', 4)">★</span>
+            <span onclick="setRating('restaurant', 5)">★</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Food Rating</label>
+          <div class="star-rating" id="food-rating">
+            <span onclick="setRating('food', 1)">★</span>
+            <span onclick="setRating('food', 2)">★</span>
+            <span onclick="setRating('food', 3)">★</span>
+            <span onclick="setRating('food', 4)">★</span>
+            <span onclick="setRating('food', 5)">★</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Delivery Rating</label>
+          <div class="star-rating" id="delivery-rating">
+            <span onclick="setRating('delivery', 1)">★</span>
+            <span onclick="setRating('delivery', 2)">★</span>
+            <span onclick="setRating('delivery', 3)">★</span>
+            <span onclick="setRating('delivery', 4)">★</span>
+            <span onclick="setRating('delivery', 5)">★</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Write a Review</label>
+          <textarea class="form-textarea" id="review-text" placeholder="Share your experience..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeReviewModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitReview()">Submit Review</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .star-rating {
+      display: flex;
+      gap: 8px;
+      font-size: 32px;
+      cursor: pointer;
+    }
+    .star-rating span {
+      color: #ddd;
+      transition: var(--transition);
+    }
+    .star-rating span.active,
+    .star-rating span:hover {
+      color: #ffc107;
+    }
+  </style>
+
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/cart.js"></script>
+  <script>
+    let currentTab = 'current';
+    let ratings = { restaurant: 0, food: 0, delivery: 0 };
+
+    // Require authentication
+    Auth.requireAuth();
+
+    // Load orders
+    function loadOrders() {
+      const user = Auth.getCurrentUser();
+      const orders = DB.filter('orders', o => o.userId === user.id);
+      const container = document.getElementById('orders-list');
+
+      let filteredOrders;
+      if (currentTab === 'current') {
+        filteredOrders = orders.filter(o => !['delivered', 'cancelled'].includes(o.status));
+      } else {
+        filteredOrders = orders.filter(o => ['delivered', 'cancelled'].includes(o.status));
+      }
+
+      if (filteredOrders.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📋</div>
+            <h3 class="empty-state-title">No orders found</h3>
+            <p class="empty-state-text">${currentTab === 'current' ? 'You have no active orders' : 'No past orders'}</p>
+            <a href="home.html" class="btn btn-primary">Order Now</a>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filteredOrders.map(order => {
+        const restaurant = DB.findById('restaurants', order.restaurantId);
+        const statusColor = Utils.getStatusColor(order.status);
+        const statusLabel = Utils.getStatusLabel(order.status);
+
+        return `
+          <div class="order-card">
+            <div class="order-header">
+              <div>
+                <span class="order-restaurant">${restaurant ? restaurant.name : 'Restaurant'}</span>
+                <span style="color: var(--gray); font-size: 13px; margin-left: 12px;">#${order.id.slice(-6).toUpperCase()}</span>
+              </div>
+              <span class="order-status" style="background: ${statusColor}20; color: ${statusColor};">${statusLabel}</span>
+            </div>
+            <div class="order-body">
+              <div class="order-items">
+                ${order.items.map(item => `
+                  <div class="order-item">
+                    <span>${item.quantity}x ${item.name}</span>
+                    <span>$${(item.price * item.quantity).toFixed(2)}</span>
+                  </div>
+                `).join('')}
+              </div>
+              <div class="order-footer">
+                <span class="order-total">$${order.total.toFixed(2)}</span>
+                <div style="display: flex; gap: 8px;">
+                  ${['pending', 'confirmed', 'preparing'].includes(order.status) ? `
+                    <button class="btn btn-sm btn-danger" onclick="cancelOrder('${order.id}')">Cancel</button>
+                  ` : ''}
+                  ${order.status === 'delivered' && !order.rating ? `
+                    <button class="btn btn-sm btn-primary" onclick="openReviewModal('${order.id}')">Rate Order</button>
+                  ` : ''}
+                  ${order.status === 'out_for_delivery' || order.status === 'ready' ? `
+                    <a href="tracking.html?orderId=${order.id}" class="btn btn-sm btn-primary">Track</a>
+                  ` : ''}
+                  ${order.status === 'delivered' ? `
+                    <button class="btn btn-sm btn-outline" onclick="reorder('${order.id}')">Reorder</button>
+                    <button class="btn btn-sm btn-outline" onclick="viewInvoice('${order.id}')">Invoice</button>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Switch tab
+    function switchTab(tab) {
+      currentTab = tab;
+      document.getElementById('tab-current').className = tab === 'current' ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+      document.getElementById('tab-history').className = tab === 'history' ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+      loadOrders();
+    }
+
+    // Cancel order
+    function cancelOrder(orderId) {
+      if (!confirm('Are you sure you want to cancel this order?')) return;
+      DB.update('orders', orderId, { status: 'cancelled' });
+      Utils.toast('Order cancelled');
+      loadOrders();
+    }
+
+    // Reorder
+    function reorder(orderId) {
+      const order = DB.findById('orders', orderId);
+      if (!order) return;
+
+      order.items.forEach(item => {
+        const food = DB.findById('foods', item.foodId);
+        if (food) {
+          Cart.addItem(food, item.quantity, item.customization);
+        }
+      });
+
+      Utils.toast('Items added to cart!');
+      window.location.href = 'cart.html';
+    }
+
+    // View invoice
+    function viewInvoice(orderId) {
+      const order = DB.findById('orders', orderId);
+      const restaurant = DB.findById('restaurants', order.restaurantId);
+      const user = Auth.getCurrentUser();
+
+      const invoiceWindow = window.open('', '_blank');
+      invoiceWindow.document.write(`
+        <html>
+        <head><title>Invoice #${order.id.slice(-6).toUpperCase()}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 40px; max-width: 600px; margin: 0 auto; }
+          .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
+          .row { display: flex; justify-content: space-between; padding: 8px 0; }
+          .total { font-size: 20px; font-weight: bold; border-top: 2px solid #333; padding-top: 10px; margin-top: 10px; }
+        </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>FoodExpress</h1>
+            <p>Invoice #${order.id.slice(-6).toUpperCase()}</p>
+            <p>${Utils.formatDateTime(order.createdAt)}</p>
+          </div>
+          <h3>Restaurant: ${restaurant ? restaurant.name : 'N/A'}</h3>
+          <h3>Customer: ${user.name}</h3>
+          <hr style="margin: 20px 0;">
+          ${order.items.map(item => `
+            <div class="row">
+              <span>${item.quantity}x ${item.name}</span>
+              <span>$${(item.price * item.quantity).toFixed(2)}</span>
+            </div>
+          `).join('')}
+          <div class="row"><span>Subtotal</span><span>$${order.subtotal.toFixed(2)}</span></div>
+          <div class="row"><span>Delivery Fee</span><span>$${order.deliveryFee.toFixed(2)}</span></div>
+          <div class="row"><span>Tax</span><span>$${order.tax.toFixed(2)}</span></div>
+          <div class="row total"><span>Total</span><span>$${order.total.toFixed(2)}</span></div>
+        </body>
+        </html>
+      `);
+    }
+
+    // Review modal functions
+    function openReviewModal(orderId) {
+      document.getElementById('review-order-id').value = orderId;
+      ratings = { restaurant: 0, food: 0, delivery: 0 };
+      updateStarDisplay();
+      Utils.showModal('review-modal');
+    }
+
+    function closeReviewModal() {
+      Utils.hideModal('review-modal');
+    }
+
+    function setRating(type, value) {
+      ratings[type] = value;
+      updateStarDisplay();
+    }
+
+    function updateStarDisplay() {
+      ['restaurant', 'food', 'delivery'].forEach(type => {
+        const container = document.getElementById(type + '-rating');
+        const stars = container.querySelectorAll('span');
+        stars.forEach((star, index) => {
+          star.classList.toggle('active', index < ratings[type]);
+        });
+      });
+    }
+
+    function submitReview() {
+      const orderId = document.getElementById('review-order-id').value;
+      const order = DB.findById('orders', orderId);
+      const user = Auth.getCurrentUser();
+      const restaurant = DB.findById('restaurants', order.restaurantId);
+
+      DB.update('orders', orderId, {
+        rating: { restaurant: ratings.restaurant, food: ratings.food, delivery: ratings.delivery },
+        review: document.getElementById('review-text').value
+      });
+
+      // Add to reviews collection
+      DB.insert('reviews', {
+        userId: user.id,
+        orderId: orderId,
+        restaurantId: order.restaurantId,
+        foodId: order.items[0].foodId,
+        userName: user.name,
+        userAvatar: user.avatar,
+        restaurantName: restaurant.name,
+        rating: ratings.restaurant,
+        foodRating: ratings.food,
+        deliveryRating: ratings.delivery,
+        review: document.getElementById('review-text').value,
+        isReported: false
+      });
+
+      Utils.toast('Thank you for your review!');
+      closeReviewModal();
+      loadOrders();
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      loadOrders();
+      Cart.updateCartBadge();
+
+      const user = Auth.getCurrentUser();
+      if (user) {
+        document.getElementById('user-avatar').src = user.avatar;
+      }
+    });
+  </script>
+</body>
+</html>

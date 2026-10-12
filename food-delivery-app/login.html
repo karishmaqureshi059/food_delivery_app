@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - FoodExpress</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .auth-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #ff6b35 0%, #e55a2b 100%);
+      padding: 20px;
+    }
+    .auth-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 450px;
+      padding: 40px;
+    }
+    .auth-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .auth-logo {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+    .auth-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--dark);
+    }
+    .auth-subtitle {
+      color: var(--gray);
+      margin-top: 8px;
+    }
+    .auth-footer {
+      text-align: center;
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .social-login {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .social-btn {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: var(--transition);
+    }
+    .social-btn:hover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+    .otp-inputs {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    .otp-input {
+      width: 50px;
+      height: 50px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .otp-input:focus {
+      border-color: var(--primary);
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-logo">🍔</div>
+        <h1 class="auth-title">Welcome Back!</h1>
+        <p class="auth-subtitle">Sign in to continue to FoodExpress</p>
+      </div>
+
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-input" id="login-email" placeholder="Enter your email" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-input" id="login-password" placeholder="Enter your password" required>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="remember-me"> Remember me
+          </label>
+          <a href="forgot-password.html" style="color: var(--primary); font-weight: 600; font-size: 14px;">Forgot Password?</a>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg">Sign In</button>
+      </form>
+
+      <div class="social-login">
+        <button class="social-btn" onclick="googleLogin()">
+          <i class="fab fa-google" style="color: #db4437;"></i> Google
+        </button>
+        <button class="social-btn" onclick="facebookLogin()">
+          <i class="fab fa-facebook" style="color: #4267B2;"></i> Facebook
+        </button>
+      </div>
+
+      <div class="auth-footer">
+        <p style="color: var(--gray);">Don't have an account? <a href="signup.html" style="color: var(--primary); font-weight: 700;">Sign Up</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    // Redirect if already logged in
+    Auth.redirectIfLoggedIn();
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+
+      const result = Auth.login(email, password);
+      if (result.success) {
+        Utils.toast('Login successful! Welcome back!');
+        setTimeout(() => window.location.href = 'home.html', 1000);
+      } else {
+        Utils.toast(result.message, 'error');
+      }
+    }
+
+    function googleLogin() {
+      Utils.toast('Google login coming soon!', 'info');
+    }
+
+    function facebookLogin() {
+      Utils.toast('Facebook login coming soon!', 'info');
+    }
+  </script>
+</body>
+</html>

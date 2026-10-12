@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Orders - FoodExpress Admin</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+      <div class="admin-sidebar-header">
+        <span class="admin-sidebar-logo">⚙️</span>
+        <span class="admin-sidebar-title">Admin Panel</span>
+      </div>
+      <nav class="admin-nav">
+        <div class="admin-nav-section">Main</div>
+        <div class="admin-nav-item" onclick="location.href='admin-dashboard.html'">
+          <span class="admin-nav-icon">📊</span> Dashboard
+        </div>
+        <div class="admin-nav-section">Management</div>
+        <div class="admin-nav-item" onclick="location.href='admin-users.html'">
+          <span class="admin-nav-icon">👥</span> Users
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-restaurants.html'">
+          <span class="admin-nav-icon">🏪</span> Restaurants
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-food.html'">
+          <span class="admin-nav-icon">🍽️</span> Food / Menu
+        </div>
+        <div class="admin-nav-item active" onclick="location.href='admin-orders.html'">
+          <span class="admin-nav-icon">📋</span> Orders
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-delivery.html'">
+          <span class="admin-nav-icon">🚗</span> Delivery Partners
+        </div>
+        <div class="admin-nav-section">Business</div>
+        <div class="admin-nav-item" onclick="location.href='admin-payments.html'">
+          <span class="admin-nav-icon">💳</span> Payments
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-reviews.html'">
+          <span class="admin-nav-icon">⭐</span> Reviews
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-coupons.html'">
+          <span class="admin-nav-icon">🎫</span> Coupons & Offers
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-notifications.html'">
+          <span class="admin-nav-icon">🔔</span> Notifications
+        </div>
+        <div class="admin-nav-section">Analytics</div>
+        <div class="admin-nav-item" onclick="location.href='admin-reports.html'">
+          <span class="admin-nav-icon">📈</span> Reports
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-analytics.html'">
+          <span class="admin-nav-icon">📉</span> Revenue & Analytics
+        </div>
+        <div class="admin-nav-section">Settings</div>
+        <div class="admin-nav-item" onclick="location.href='admin-settings.html'">
+          <span class="admin-nav-icon">⚙️</span> Settings
+        </div>
+        <div class="admin-nav-item" onclick="Auth.adminLogout()">
+          <span class="admin-nav-icon">🚪</span> Logout
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <div class="admin-topbar">
+        <h1 class="admin-topbar-title">Manage Orders</h1>
+      </div>
+
+      <div class="admin-content">
+        <div class="admin-table-container">
+          <div class="admin-table-header">
+            <h3 class="admin-table-title">All Orders</h3>
+          </div>
+          <div class="table-filters">
+            <input type="text" class="table-search" id="order-search" placeholder="Search orders..." onkeyup="filterOrders()">
+            <select class="table-filter-select" id="order-status" onchange="filterOrders()">
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="preparing">Preparing</option>
+              <option value="ready">Ready</option>
+              <option value="out_for_delivery">Out for Delivery</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Restaurant</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="orders-table-body">
+              <!-- Loaded via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Order Details Modal -->
+  <div class="modal-overlay" id="order-modal">
+    <div class="modal" style="max-width: 700px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Order Details</h3>
+        <button class="modal-close" onclick="closeOrderModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="order-details-content">
+        <!-- Loaded via JS -->
+      </div>
+      <div class="modal-footer" id="order-modal-footer">
+        <!-- Loaded via JS -->
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    Auth.requireAdmin();
+
+    function loadOrders() {
+      const orders = DB.collection('orders').reverse();
+      const tbody = document.getElementById('orders-table-body');
+
+      tbody.innerHTML = orders.map(order => {
+        const user = DB.findById('users', order.userId);
+        const restaurant = DB.findById('restaurants', order.restaurantId);
+        const statusColor = Utils.getStatusColor(order.status);
+        return `
+          <tr>
+            <td>#${order.id.slice(-6).toUpperCase()}</td>
+            <td>${user ? user.name : 'N/A'}</td>
+            <td>${restaurant ? restaurant.name : 'N/A'}</td>
+            <td>${order.items.reduce((sum, item) => sum + item.quantity, 0)}</td>
+            <td>$${order.total.toFixed(2)}</td>
+            <td><span class="status-badge" style="background: ${statusColor}20; color: ${statusColor};">${Utils.getStatusLabel(order.status)}</span></td>
+            <td>${Utils.formatDate(order.createdAt)}</td>
+            <td>
+              <div class="action-btns">
+                <button class="action-btn view" onclick="viewOrder('${order.id}')" title="View">👁</button>
+                <button class="action-btn edit" onclick="updateOrderStatus('${order.id}')" title="Update Status">✏️</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterOrders() {
+      const search = document.getElementById('order-search').value.toLowerCase();
+      const status = document.getElementById('order-status').value;
+      const orders = DB.collection('orders').filter(order => {
+        const user = DB.findById('users', order.userId);
+        const restaurant = DB.findById('restaurants', order.restaurantId);
+        const matchesSearch = order.id.toLowerCase().includes(search) ||
+          (user && user.name.toLowerCase().includes(search)) ||
+          (restaurant && restaurant.name.toLowerCase().includes(search));
+        const matchesStatus = !status || order.status === status;
+        return matchesSearch && matchesStatus;
+      }).reverse();
+
+      const tbody = document.getElementById('orders-table-body');
+      tbody.innerHTML = orders.map(order => {
+        const user = DB.findById('users', order.userId);
+        const restaurant = DB.findById('restaurants', order.restaurantId);
+        const statusColor = Utils.getStatusColor(order.status);
+        return `
+          <tr>
+            <td>#${order.id.slice(-6).toUpperCase()}</td>
+            <td>${user ? user.name : 'N/A'}</td>
+            <td>${restaurant ? restaurant.name : 'N/A'}</td>
+            <td>${order.items.reduce((sum, item) => sum + item.quantity, 0)}</td>
+            <td>$${order.total.toFixed(2)}</td>
+            <td><span class="status-badge" style="background: ${statusColor}20; color: ${statusColor};">${Utils.getStatusLabel(order.status)}</span></td>
+            <td>${Utils.formatDate(order.createdAt)}</td>
+            <td>
+              <div class="action-btns">
+                <button class="action-btn view" onclick="viewOrder('${order.id}')" title="View">👁</button>
+                <button class="action-btn edit" onclick="updateOrderStatus('${order.id}')" title="Update Status">✏️</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function viewOrder(orderId) {
+      const order = DB.findById('orders', orderId);
+      if (!order) return;
+
+      const user = DB.findById('users', order.userId);
+      const restaurant = DB.findById('restaurants', order.restaurantId);
+      const statusColor = Utils.getStatusColor(order.status);
+
+      document.getElementById('order-details-content').innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+          <div style="background: var(--light); padding: 12px; border-radius: 8px;">
+            <p style="font-size: 12px; color: var(--gray);">Order ID</p>
+            <p style="font-weight: 700;">#${order.id.slice(-6).toUpperCase()}</p>
+          </div>
+          <div style="background: var(--light); padding: 12px; border-radius: 8px;">
+            <p style="font-size: 12px; color: var(--gray);">Status</p>
+            <p style="font-weight: 700; color: ${statusColor};">${Utils.getStatusLabel(order.status)}</p>
+          </div>
+          <div style="background: var(--light); padding: 12px; border-radius: 8px;">
+            <p style="font-size: 12px; color: var(--gray);">Customer</p>
+            <p style="font-weight: 700;">${user ? user.name : 'N/A'}</p>
+          </div>
+          <div style="background: var(--light); padding: 12px; border-radius: 8px;">
+            <p style="font-size: 12px; color: var(--gray);">Restaurant</p>
+            <p style="font-weight: 700;">${restaurant ? restaurant.name : 'N/A'}</p>
+          </div>
+        </div>
+        <h4 style="margin-bottom: 12px;">Items</h4>
+        ${order.items.map(item => `
+          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+            <span>${item.quantity}x ${item.name}</span>
+            <span style="font-weight: 600;">$${(item.price * item.quantity).toFixed(2)}</span>
+          </div>
+        `).join('')}
+        <div style="margin-top: 16px; padding-top: 16px; border-top: 2px solid var(--border);">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span>Subtotal</span><span>$${order.subtotal.toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span>Delivery Fee</span><span>$${order.deliveryFee.toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span>Tax</span><span>$${order.tax.toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 18px;">
+            <span>Total</span><span style="color: var(--primary);">$${order.total.toFixed(2)}</span>
+          </div>
+        </div>
+        <div style="margin-top: 16px;">
+          <p style="font-size: 12px; color: var(--gray);">Delivery Address</p>
+          <p style="font-weight: 600;">${order.deliveryAddress.street}, ${order.deliveryAddress.city}, ${order.deliveryAddress.state} ${order.deliveryAddress.zip}</p>
+        </div>
+        <div style="margin-top: 12px;">
+          <p style="font-size: 12px; color: var(--gray);">Payment Method</p>
+          <p style="font-weight: 600;">${order.paymentMethod.toUpperCase()}</p>
+        </div>
+      `;
+
+      // Status update buttons
+      const nextStatuses = {
+        'pending': ['confirmed', 'cancelled'],
+        'confirmed': ['preparing', 'cancelled'],
+        'preparing': ['ready', 'cancelled'],
+        'ready': ['out_for_delivery', 'cancelled'],
+        'out_for_delivery': ['delivered'],
+        'delivered': [],
+        'cancelled': []
+      };
+
+      const buttons = nextStatuses[order.status] || [];
+      document.getElementById('order-modal-footer').innerHTML = buttons.map(status => `
+        <button class="btn btn-primary" onclick="changeOrderStatus('${order.id}', '${status}')">
+          ${Utils.getStatusLabel(status)}
+        </button>
+      `).join('');
+
+      Utils.showModal('order-modal');
+    }
+
+    function closeOrderModal() {
+      Utils.hideModal('order-modal');
+    }
+
+    function updateOrderStatus(orderId) {
+      viewOrder(orderId);
+    }
+
+    function changeOrderStatus(orderId, newStatus) {
+      DB.update('orders', orderId, { status: newStatus });
+      Utils.toast(`Order status updated to ${Utils.getStatusLabel(newStatus)}`);
+      closeOrderModal();
+      loadOrders();
+    }
+
+    document.addEventListener('DOMContentLoaded', loadOrders);
+  </script>
+</body>
+</html>

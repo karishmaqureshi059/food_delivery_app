@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Restaurants - FoodExpress Admin</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+      <div class="admin-sidebar-header">
+        <span class="admin-sidebar-logo">⚙️</span>
+        <span class="admin-sidebar-title">Admin Panel</span>
+      </div>
+      <nav class="admin-nav">
+        <div class="admin-nav-section">Main</div>
+        <div class="admin-nav-item" onclick="location.href='admin-dashboard.html'">
+          <span class="admin-nav-icon">📊</span> Dashboard
+        </div>
+        <div class="admin-nav-section">Management</div>
+        <div class="admin-nav-item" onclick="location.href='admin-users.html'">
+          <span class="admin-nav-icon">👥</span> Users
+        </div>
+        <div class="admin-nav-item active" onclick="location.href='admin-restaurants.html'">
+          <span class="admin-nav-icon">🏪</span> Restaurants
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-food.html'">
+          <span class="admin-nav-icon">🍽️</span> Food / Menu
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-orders.html'">
+          <span class="admin-nav-icon">📋</span> Orders
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-delivery.html'">
+          <span class="admin-nav-icon">🚗</span> Delivery Partners
+        </div>
+        <div class="admin-nav-section">Business</div>
+        <div class="admin-nav-item" onclick="location.href='admin-payments.html'">
+          <span class="admin-nav-icon">💳</span> Payments
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-reviews.html'">
+          <span class="admin-nav-icon">⭐</span> Reviews
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-coupons.html'">
+          <span class="admin-nav-icon">🎫</span> Coupons & Offers
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-notifications.html'">
+          <span class="admin-nav-icon">🔔</span> Notifications
+        </div>
+        <div class="admin-nav-section">Analytics</div>
+        <div class="admin-nav-item" onclick="location.href='admin-reports.html'">
+          <span class="admin-nav-icon">📈</span> Reports
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-analytics.html'">
+          <span class="admin-nav-icon">📉</span> Revenue & Analytics
+        </div>
+        <div class="admin-nav-section">Settings</div>
+        <div class="admin-nav-item" onclick="location.href='admin-settings.html'">
+          <span class="admin-nav-icon">⚙️</span> Settings
+        </div>
+        <div class="admin-nav-item" onclick="Auth.adminLogout()">
+          <span class="admin-nav-icon">🚪</span> Logout
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <div class="admin-topbar">
+        <h1 class="admin-topbar-title">Manage Restaurants</h1>
+        <div class="admin-topbar-actions">
+          <button class="btn btn-primary btn-sm" onclick="openAddRestaurantModal()">+ Add Restaurant</button>
+        </div>
+      </div>
+
+      <div class="admin-content">
+        <div class="admin-table-container">
+          <div class="admin-table-header">
+            <h3 class="admin-table-title">All Restaurants</h3>
+          </div>
+          <div class="table-filters">
+            <input type="text" class="table-search" id="restaurant-search" placeholder="Search restaurants..." onkeyup="filterRestaurants()">
+            <select class="table-filter-select" id="restaurant-status" onchange="filterRestaurants()">
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="pending">Pending Approval</option>
+            </select>
+          </div>
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Restaurant</th>
+                <th>Cuisine</th>
+                <th>Rating</th>
+                <th>Orders</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="restaurants-table-body">
+              <!-- Loaded via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add/Edit Restaurant Modal -->
+  <div class="modal-overlay" id="restaurant-modal">
+    <div class="modal" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="restaurant-modal-title">Add Restaurant</h3>
+        <button class="modal-close" onclick="closeRestaurantModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="restaurant-id">
+        <div class="form-group">
+          <label class="form-label">Restaurant Name</label>
+          <input type="text" class="form-input" id="restaurant-name" placeholder="Restaurant name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" id="restaurant-desc" placeholder="Description"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cuisine (comma separated)</label>
+          <input type="text" class="form-input" id="restaurant-cuisine" placeholder="Italian, Pizza">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">Delivery Time</label>
+            <input type="text" class="form-input" id="restaurant-time" placeholder="25-35 min">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Delivery Fee ($)</label>
+            <input type="number" class="form-input" id="restaurant-fee" placeholder="2.99" step="0.01">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">Min Order ($)</label>
+            <input type="number" class="form-input" id="restaurant-min" placeholder="15" step="0.01">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Price Range</label>
+            <select class="form-select" id="restaurant-price">
+              <option value="$">$</option>
+              <option value="$$">$$</option>
+              <option value="$$$">$$$</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Address</label>
+          <input type="text" class="form-input" id="restaurant-address" placeholder="Full address">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input type="text" class="form-input" id="restaurant-phone" placeholder="+1-555-0100">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Image URL</label>
+          <input type="url" class="form-input" id="restaurant-image" placeholder="https://...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeRestaurantModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveRestaurant()">Save Restaurant</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    Auth.requireAdmin();
+
+    function loadRestaurants() {
+      const restaurants = DB.collection('restaurants');
+      const tbody = document.getElementById('restaurants-table-body');
+
+      tbody.innerHTML = restaurants.map(rest => {
+        const orderCount = DB.filter('orders', o => o.restaurantId === rest.id).length;
+        let statusClass = 'status-active';
+        let statusText = 'Active';
+        if (!rest.isApproved) {
+          statusClass = 'status-pending';
+          statusText = 'Pending';
+        } else if (!rest.isActive) {
+          statusClass = 'status-inactive';
+          statusText = 'Inactive';
+        }
+
+        return `
+          <tr>
+            <td>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <img src="${rest.image}" alt="${rest.name}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;">
+                <div>
+                  <strong>${rest.name}</strong>
+                  <p style="font-size: 12px; color: var(--gray);">${rest.address.split(',')[0]}</p>
+                </div>
+              </div>
+            </td>
+            <td>${rest.cuisine.join(', ')}</td>
+            <td>★ ${rest.rating}</td>
+            <td>${orderCount}</td>
+            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            <td>
+              <div class="action-btns">
+                <button class="action-btn view" onclick="viewRestaurant('${rest.id}')" title="View">👁</button>
+                <button class="action-btn edit" onclick="editRestaurant('${rest.id}')" title="Edit">✏️</button>
+                ${!rest.isApproved ? `
+                  <button class="action-btn approve" onclick="approveRestaurant('${rest.id}')" title="Approve">✓</button>
+                  <button class="action-btn reject" onclick="rejectRestaurant('${rest.id}')" title="Reject">✕</button>
+                ` : `
+                  <button class="action-btn ${rest.isActive ? 'delete' : 'approve'}" onclick="toggleRestaurantStatus('${rest.id}')" title="${rest.isActive ? 'Deactivate' : 'Activate'}">
+                    ${rest.isActive ? '🚫' : '✓'}
+                  </button>
+                `}
+                <button class="action-btn delete" onclick="deleteRestaurant('${rest.id}')" title="Delete">🗑</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterRestaurants() {
+      const search = document.getElementById('restaurant-search').value.toLowerCase();
+      const status = document.getElementById('restaurant-status').value;
+      const restaurants = DB.collection('restaurants').filter(rest => {
+        const matchesSearch = rest.name.toLowerCase().includes(search) || rest.cuisine.some(c => c.toLowerCase().includes(search));
+        let matchesStatus = true;
+        if (status === 'active') matchesStatus = rest.isApproved && rest.isActive;
+        else if (status === 'inactive') matchesStatus = rest.isApproved && !rest.isActive;
+        else if (status === 'pending') matchesStatus = !rest.isApproved;
+        return matchesSearch && matchesStatus;
+      });
+
+      const tbody = document.getElementById('restaurants-table-body');
+      tbody.innerHTML = restaurants.map(rest => {
+        const orderCount = DB.filter('orders', o => o.restaurantId === rest.id).length;
+        let statusClass = 'status-active';
+        let statusText = 'Active';
+        if (!rest.isApproved) {
+          statusClass = 'status-pending';
+          statusText = 'Pending';
+        } else if (!rest.isActive) {
+          statusClass = 'status-inactive';
+          statusText = 'Inactive';
+        }
+
+        return `
+          <tr>
+            <td>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <img src="${rest.image}" alt="${rest.name}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;">
+                <div>
+                  <strong>${rest.name}</strong>
+                  <p style="font-size: 12px; color: var(--gray);">${rest.address.split(',')[0]}</p>
+                </div>
+              </div>
+            </td>
+            <td>${rest.cuisine.join(', ')}</td>
+            <td>★ ${rest.rating}</td>
+            <td>${orderCount}</td>
+            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            <td>
+              <div class="action-btns">
+                <button class="action-btn view" onclick="viewRestaurant('${rest.id}')" title="View">👁</button>
+                <button class="action-btn edit" onclick="editRestaurant('${rest.id}')" title="Edit">✏️</button>
+                ${!rest.isApproved ? `
+                  <button class="action-btn approve" onclick="approveRestaurant('${rest.id}')" title="Approve">✓</button>
+                  <button class="action-btn reject" onclick="rejectRestaurant('${rest.id}')" title="Reject">✕</button>
+                ` : `
+                  <button class="action-btn ${rest.isActive ? 'delete' : 'approve'}" onclick="toggleRestaurantStatus('${rest.id}')" title="${rest.isActive ? 'Deactivate' : 'Activate'}">
+                    ${rest.isActive ? '🚫' : '✓'}
+                  </button>
+                `}
+                <button class="action-btn delete" onclick="deleteRestaurant('${rest.id}')" title="Delete">🗑</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openAddRestaurantModal() {
+      document.getElementById('restaurant-modal-title').textContent = 'Add Restaurant';
+      document.getElementById('restaurant-id').value = '';
+      document.getElementById('restaurant-name').value = '';
+      document.getElementById('restaurant-desc').value = '';
+      document.getElementById('restaurant-cuisine').value = '';
+      document.getElementById('restaurant-time').value = '';
+      document.getElementById('restaurant-fee').value = '';
+      document.getElementById('restaurant-min').value = '';
+      document.getElementById('restaurant-price').value = '$$';
+      document.getElementById('restaurant-address').value = '';
+      document.getElementById('restaurant-phone').value = '';
+      document.getElementById('restaurant-image').value = '';
+      Utils.showModal('restaurant-modal');
+    }
+
+    function closeRestaurantModal() {
+      Utils.hideModal('restaurant-modal');
+    }
+
+    function saveRestaurant() {
+      const id = document.getElementById('restaurant-id').value;
+      const name = document.getElementById('restaurant-name').value;
+      const description = document.getElementById('restaurant-desc').value;
+      const cuisine = document.getElementById('restaurant-cuisine').value.split(',').map(c => c.trim());
+      const deliveryTime = document.getElementById('restaurant-time').value;
+      const deliveryFee = parseFloat(document.getElementById('restaurant-fee').value) || 0;
+      const minOrder = parseFloat(document.getElementById('restaurant-min').value) || 0;
+      const priceRange = document.getElementById('restaurant-price').value;
+      const address = document.getElementById('restaurant-address').value;
+      const phone = document.getElementById('restaurant-phone').value;
+      const image = document.getElementById('restaurant-image').value || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400';
+
+      if (!name || !address) {
+        Utils.toast('Please fill required fields', 'error');
+        return;
+      }
+
+      const data = { name, description, cuisine, deliveryTime, deliveryFee, minOrder, priceRange, address, phone, image };
+
+      if (id) {
+        DB.update('restaurants', id, data);
+        Utils.toast('Restaurant updated!');
+      } else {
+        DB.insert('restaurants', {
+          ...data,
+          coverImage: image,
+          rating: 0,
+          reviewCount: 0,
+          isOpen: true,
+          isApproved: true,
+          isActive: true,
+          categories: [],
+          openingHours: '10:00 AM - 10:00 PM'
+        });
+        Utils.toast('Restaurant added!');
+      }
+
+      closeRestaurantModal();
+      loadRestaurants();
+    }
+
+    function viewRestaurant(id) {
+      const rest = DB.findById('restaurants', id);
+      if (!rest) return;
+      window.location.href = 'restaurant.html?id=' + id;
+    }
+
+    function editRestaurant(id) {
+      const rest = DB.findById('restaurants', id);
+      if (!rest) return;
+
+      document.getElementById('restaurant-modal-title').textContent = 'Edit Restaurant';
+      document.getElementById('restaurant-id').value = rest.id;
+      document.getElementById('restaurant-name').value = rest.name;
+      document.getElementById('restaurant-desc').value = rest.description;
+      document.getElementById('restaurant-cuisine').value = rest.cuisine.join(', ');
+      document.getElementById('restaurant-time').value = rest.deliveryTime;
+      document.getElementById('restaurant-fee').value = rest.deliveryFee;
+      document.getElementById('restaurant-min').value = rest.minOrder;
+      document.getElementById('restaurant-price').value = rest.priceRange;
+      document.getElementById('restaurant-address').value = rest.address;
+      document.getElementById('restaurant-phone').value = rest.phone;
+      document.getElementById('restaurant-image').value = rest.image;
+      Utils.showModal('restaurant-modal');
+    }
+
+    function approveRestaurant(id) {
+      DB.update('restaurants', id, { isApproved: true, isActive: true });
+      Utils.toast('Restaurant approved!');
+      loadRestaurants();
+    }
+
+    function rejectRestaurant(id) {
+      DB.update('restaurants', id, { isApproved: false });
+      Utils.toast('Restaurant rejected', 'error');
+      loadRestaurants();
+    }
+
+    function toggleRestaurantStatus(id) {
+      const rest = DB.findById('restaurants', id);
+      if (!rest) return;
+      DB.update('restaurants', id, { isActive: !rest.isActive });
+      Utils.toast(`Restaurant ${rest.isActive ? 'deactivated' : 'activated'}!`);
+      loadRestaurants();
+    }
+
+    function deleteRestaurant(id) {
+      if (!confirm('Are you sure you want to delete this restaurant?')) return;
+      DB.delete('restaurants', id);
+      Utils.toast('Restaurant deleted');
+      loadRestaurants();
+    }
+
+    document.addEventListener('DOMContentLoaded', loadRestaurants);
+  </script>
+</body>
+</html>

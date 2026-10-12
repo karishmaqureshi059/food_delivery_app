@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Users - FoodExpress Admin</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+      <div class="admin-sidebar-header">
+        <span class="admin-sidebar-logo">⚙️</span>
+        <span class="admin-sidebar-title">Admin Panel</span>
+      </div>
+      <nav class="admin-nav">
+        <div class="admin-nav-section">Main</div>
+        <div class="admin-nav-item" onclick="location.href='admin-dashboard.html'">
+          <span class="admin-nav-icon">📊</span> Dashboard
+        </div>
+        <div class="admin-nav-section">Management</div>
+        <div class="admin-nav-item active" onclick="location.href='admin-users.html'">
+          <span class="admin-nav-icon">👥</span> Users
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-restaurants.html'">
+          <span class="admin-nav-icon">🏪</span> Restaurants
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-food.html'">
+          <span class="admin-nav-icon">🍽️</span> Food / Menu
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-orders.html'">
+          <span class="admin-nav-icon">📋</span> Orders
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-delivery.html'">
+          <span class="admin-nav-icon">🚗</span> Delivery Partners
+        </div>
+        <div class="admin-nav-section">Business</div>
+        <div class="admin-nav-item" onclick="location.href='admin-payments.html'">
+          <span class="admin-nav-icon">💳</span> Payments
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-reviews.html'">
+          <span class="admin-nav-icon">⭐</span> Reviews
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-coupons.html'">
+          <span class="admin-nav-icon">🎫</span> Coupons & Offers
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-notifications.html'">
+          <span class="admin-nav-icon">🔔</span> Notifications
+        </div>
+        <div class="admin-nav-section">Analytics</div>
+        <div class="admin-nav-item" onclick="location.href='admin-reports.html'">
+          <span class="admin-nav-icon">📈</span> Reports
+        </div>
+        <div class="admin-nav-item" onclick="location.href='admin-analytics.html'">
+          <span class="admin-nav-icon">📉</span> Revenue & Analytics
+        </div>
+        <div class="admin-nav-section">Settings</div>
+        <div class="admin-nav-item" onclick="location.href='admin-settings.html'">
+          <span class="admin-nav-icon">⚙️</span> Settings
+        </div>
+        <div class="admin-nav-item" onclick="Auth.adminLogout()">
+          <span class="admin-nav-icon">🚪</span> Logout
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <div class="admin-topbar">
+        <h1 class="admin-topbar-title">Manage Users</h1>
+        <div class="admin-topbar-actions">
+          <span id="admin-name" style="font-weight: 600;"></span>
+        </div>
+      </div>
+
+      <div class="admin-content">
+        <div class="admin-table-container">
+          <div class="admin-table-header">
+            <h3 class="admin-table-title">All Users</h3>
+            <button class="btn btn-primary btn-sm" onclick="exportUsers()">Export CSV</button>
+          </div>
+          <div class="table-filters">
+            <input type="text" class="table-search" id="user-search" placeholder="Search users..." onkeyup="filterUsers()">
+            <select class="table-filter-select" id="user-status-filter" onchange="filterUsers()">
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="blocked">Blocked</option>
+            </select>
+          </div>
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Orders</th>
+                <th>Status</th>
+                <th>Joined</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body">
+              <!-- Loaded via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- User Details Modal -->
+  <div class="modal-overlay" id="user-modal">
+    <div class="modal" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 class="modal-title">User Details</h3>
+        <button class="modal-close" onclick="closeUserModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="user-details-content">
+        <!-- Loaded via JS -->
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    Auth.requireAdmin();
+
+    function loadUsers() {
+      const admin = Auth.getCurrentAdmin();
+      if (admin) document.getElementById('admin-name').textContent = admin.name;
+
+      const users = DB.collection('users');
+      const tbody = document.getElementById('users-table-body');
+
+      tbody.innerHTML = users.map(user => {
+        const orderCount = DB.filter('orders', o => o.userId === user.id).length;
+        return `
+          <tr>
+            <td>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <img src="${user.avatar}" alt="${user.name}" style="width: 40px; height: 40px; border-radius: 50%;">
+                <span>${user.name}</span>
+              </div>
+            </td>
+            <td>${user.email}</td>
+            <td>${user.phone}</td>
+            <td>${orderCount}</td>
+            <td>
+              <span class="status-badge ${user.isActive ? 'status-active' : 'status-inactive'}">
+                ${user.isActive ? 'Active' : 'Blocked'}
+              </span>
+            </td>
+            <td>${Utils.formatDate(user.createdAt)}</td>
+            <td>
+              <div class="action-btns">
+                <button class="action-btn view" onclick="viewUser('${user.id}')" title="View">👁</button>
+                <button class="action-btn ${user.isActive ? 'delete' : 'approve'}" onclick="toggleUserStatus('${user.id}')" title="${user.isActive ? 'Block' : 'Unblock'}">
+                  ${user.isActive ? '🚫' : '✓'}
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterUsers() {
+      const search = document.getElementById('user-search').value.toLowerCase();
+      const status = document.getElementById('user-status-filter').value;
+      const users = DB.collection('users').filter(user => {
+        const matchesSearch = user.name.toLowerCase().includes(search) || user.email.toLowerCase().includes(search);
+        const matchesStatus = !status || (status === 'active' ? user.isActive : !user.isActive);
+        return matchesSearch && matchesStatus;
+      });
+
+      const tbody = document.getElementById('users-table-body');
+      tbody.innerHTML = users.map(user => {
+        const orderCount = DB.filter('orders', o => o.userId === user.id).length;
+        return `
+          <tr>
+            <td>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <img src="${user.avatar}" alt="${user.name}" style="width: 40px; height: 40px; border-radius: 50%;">
+                <span>${user.name}</span>
+              </div>
+            </td>
+            <td>${user.email}</td>
+            <td>${user.phone}</td>
+            <td>${orderCount}</td>
+            <td>
+              <span class="status-badge ${user.isActive ? 'status-active' : 'status-inactive'}">
+                ${user.isActive ? 'Active' : 'Blocked'}
+              </span>
+            </td>
+            <td>${Utils.formatDate(user.createdAt)}</td>
+            <td>
+              <div class="action-btns">
+                <button class="action-btn view" onclick="viewUser('${user.id}')" title="View">👁</button>
+                <button class="action-btn ${user.isActive ? 'delete' : 'approve'}" onclick="toggleUserStatus('${user.id}')" title="${user.isActive ? 'Block' : 'Unblock'}">
+                  ${user.isActive ? '🚫' : '✓'}
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function viewUser(userId) {
+      const user = DB.findById('users', userId);
+      if (!user) return;
+
+      const orders = DB.filter('orders', o => o.userId === userId);
+      const totalSpent = orders.reduce((sum, o) => sum + o.total, 0);
+
+      document.getElementById('user-details-content').innerHTML = `
+        <div style="text-align: center; margin-bottom: 20px;">
+          <img src="${user.avatar}" alt="${user.name}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">
+          <h3 style="margin-top: 12px;">${user.name}</h3>
+          <p style="color: var(--gray);">${user.email}</p>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+          <div style="background: var(--light); padding: 12px; border-radius: 8px;">
+            <p style="font-size: 12px; color: var(--gray);">Phone</p>
+            <p style="font-weight: 600;">${user.phone}</p>
+          </div>
+          <div style="background: var(--light); padding: 12px; border-radius: 8px;">
+            <p style="font-size: 12px; color: var(--gray);">Total Orders</p>
+            <p style="font-weight: 600;">${orders.length}</p>
+          </div>
+          <div style="background: var(--light); padding: 12px; border-radius: 8px;">
+            <p style="font-size: 12px; color: var(--gray);">Total Spent</p>
+            <p style="font-weight: 600;">$${totalSpent.toFixed(2)}</p>
+          </div>
+          <div style="background: var(--light); padding: 12px; border-radius: 8px;">
+            <p style="font-size: 12px; color: var(--gray);">Member Since</p>
+            <p style="font-weight: 600;">${Utils.formatDate(user.createdAt)}</p>
+          </div>
+        </div>
+        <h4 style="margin-bottom: 12px;">Order History</h4>
+        <div style="max-height: 200px; overflow-y: auto;">
+          ${orders.length > 0 ? orders.slice(-5).reverse().map(order => {
+            const restaurant = DB.findById('restaurants', order.restaurantId);
+            return `
+              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+                <div>
+                  <strong>#${order.id.slice(-6).toUpperCase()}</strong>
+                  <span style="color: var(--gray); font-size: 13px; margin-left: 8px;">${restaurant ? restaurant.name : 'N/A'}</span>
+                </div>
+                <div>
+                  <span style="font-weight: 600;">$${order.total.toFixed(2)}</span>
+                  <span class="status-badge" style="background: ${Utils.getStatusColor(order.status)}20; color: ${Utils.getStatusColor(order.status)}; margin-left: 8px;">${Utils.getStatusLabel(order.status)}</span>
+                </div>
+              </div>
+            `;
+          }).join('') : '<p style="color: var(--gray); text-align: center;">No orders yet</p>'}
+        </div>
+      `;
+      Utils.showModal('user-modal');
+    }
+
+    function closeUserModal() {
+      Utils.hideModal('user-modal');
+    }
+
+    function toggleUserStatus(userId) {
+      const user = DB.findById('users', userId);
+      if (!user) return;
+
+      const newStatus = !user.isActive;
+      DB.update('users', userId, { isActive: newStatus });
+      Utils.toast(`User ${newStatus ? 'activated' : 'blocked'} successfully!`);
+      loadUsers();
+    }
+
+    function exportUsers() {
+      const users = DB.collection('users');
+      let csv = 'Name,Email,Phone,Orders,Status,Joined\n';
+      users.forEach(user => {
+        const orderCount = DB.filter('orders', o => o.userId === user.id).length;
+        csv += `${user.name},${user.email},${user.phone},${orderCount},${user.isActive ? 'Active' : 'Blocked'},${Utils.formatDate(user.createdAt)}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'users.csv';
+      a.click();
+    }
+
+    document.addEventListener('DOMContentLoaded', loadUsers);
+  </script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FoodExpress - Food Delivery</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="index.html" class="navbar-brand">
+        <span>🍔</span> FoodExpress
+      </a>
+      <ul class="navbar-menu">
+        <li><a href="index.html" class="navbar-link active">Home</a></li>
+        <li><a href="home.html" class="navbar-link">Restaurants</a></li>
+        <li><a href="home.html" class="navbar-link">Offers</a></li>
+      </ul>
+      <div class="navbar-actions">
+        <a href="login.html" class="btn btn-outline btn-sm">Login</a>
+        <a href="signup.html" class="btn btn-primary btn-sm">Sign Up</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Delicious Food,<br>Delivered To Your Door</h1>
+      <p>Order from the best local restaurants with easy, on-demand delivery.</p>
+      <div class="hero-search">
+        <input type="text" placeholder="Search for restaurants or dishes..." id="hero-search-input">
+        <button onclick="searchRestaurants()">Search</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories Section -->
+  <section class="section">
+    <div class="section-container">
+      <div class="section-header">
+        <h2>What are you craving?</h2>
+        <p>Explore popular categories</p>
+      </div>
+      <div class="category-grid" id="category-grid">
+        <!-- Categories loaded via JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Popular Restaurants Section -->
+  <section class="section" style="background: white;">
+    <div class="section-container">
+      <div class="section-header">
+        <h2>Popular Restaurants</h2>
+        <p>Top-rated restaurants near you</p>
+      </div>
+      <div class="restaurant-grid" id="restaurant-grid">
+        <!-- Restaurants loaded via JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section class="section">
+    <div class="section-container">
+      <div class="section-header">
+        <h2>How It Works</h2>
+        <p>Get your food delivered in 4 simple steps</p>
+      </div>
+      <div class="category-grid" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="category-card">
+          <div class="category-icon">📍</div>
+          <div class="category-name">Choose Location</div>
+          <p class="card-text">Set your delivery location</p>
+        </div>
+        <div class="category-card">
+          <div class="category-icon">🍽️</div>
+          <div class="category-name">Pick Restaurant</div>
+          <p class="card-text">Browse menus and pick your favorite</p>
+        </div>
+        <div class="category-card">
+          <div class="category-icon">💳</div>
+          <div class="category-name">Pay Online</div>
+          <p class="card-text">Multiple payment options available</p>
+        </div>
+        <div class="category-card">
+          <div class="category-icon">🚀</div>
+          <div class="category-name">Fast Delivery</div>
+          <p class="card-text">Get food delivered in minutes</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Offers Section -->
+  <section class="section" style="background: linear-gradient(135deg, #ff6b35 0%, #e55a2b 100%); color: white;">
+    <div class="section-container">
+      <div class="section-header">
+        <h2 style="color: white;">Special Offers</h2>
+        <p style="color: rgba(255,255,255,0.8);">Don't miss out on these amazing deals</p>
+      </div>
+      <div class="restaurant-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="card" style="background: white; color: var(--dark);">
+          <div class="card-body" style="text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 16px;">🎉</div>
+            <h3 class="card-title">20% OFF</h3>
+            <p class="card-text">On your first order</p>
+            <p style="font-size: 24px; font-weight: 800; color: var(--primary); margin: 12px 0;">WELCOME20</p>
+            <button class="btn btn-primary btn-sm" onclick="copyCode('WELCOME20')">Copy Code</button>
+          </div>
+        </div>
+        <div class="card" style="background: white; color: var(--dark);">
+          <div class="card-body" style="text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 16px;">🚗</div>
+            <h3 class="card-title">Free Delivery</h3>
+            <p class="card-text">On orders above $25</p>
+            <p style="font-size: 24px; font-weight: 800; color: var(--primary); margin: 12px 0;">FREEDELIVERY</p>
+            <button class="btn btn-primary btn-sm" onclick="copyCode('FREEDELIVERY')">Copy Code</button>
+          </div>
+        </div>
+        <div class="card" style="background: white; color: var(--dark);">
+          <div class="card-body" style="text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 16px;">💰</div>
+            <h3 class="card-title">$10 OFF</h3>
+            <p class="card-text">On orders above $40</p>
+            <p style="font-size: 24px; font-weight: 800; color: var(--primary); margin: 12px 0;">FLAT10</p>
+            <button class="btn btn-primary btn-sm" onclick="copyCode('FLAT10')">Copy Code</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- App Download Section -->
+  <section class="section">
+    <div class="section-container">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;">
+        <div>
+          <h2 style="font-size: 36px; font-weight: 800; margin-bottom: 16px;">Get the App</h2>
+          <p style="color: var(--gray); margin-bottom: 24px;">Download our mobile app for the best food delivery experience. Available on iOS and Android.</p>
+          <div style="display: flex; gap: 16px;">
+            <button class="btn btn-secondary"><i class="fab fa-apple"></i> App Store</button>
+            <button class="btn btn-secondary"><i class="fab fa-google-play"></i> Google Play</button>
+          </div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 120px;">📱</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="background: var(--dark); color: white; padding: 40px 20px;">
+    <div class="section-container">
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px;">
+        <div>
+          <h3 style="margin-bottom: 16px;">🍔 FoodExpress</h3>
+          <p style="color: var(--gray-light); font-size: 14px;">Delivering happiness to your doorstep since 2024.</p>
+        </div>
+        <div>
+          <h4 style="margin-bottom: 16px;">Company</h4>
+          <ul style="list-style: none; color: var(--gray-light); font-size: 14px;">
+            <li style="margin-bottom: 8px;"><a href="#">About Us</a></li>
+            <li style="margin-bottom: 8px;"><a href="#">Careers</a></li>
+            <li style="margin-bottom: 8px;"><a href="#">Blog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 style="margin-bottom: 16px;">Support</h4>
+          <ul style="list-style: none; color: var(--gray-light); font-size: 14px;">
+            <li style="margin-bottom: 8px;"><a href="#">Help Center</a></li>
+            <li style="margin-bottom: 8px;"><a href="#">Contact Us</a></li>
+            <li style="margin-bottom: 8px;"><a href="#">Privacy Policy</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 style="margin-bottom: 16px;">Contact</h4>
+          <ul style="list-style: none; color: var(--gray-light); font-size: 14px;">
+            <li style="margin-bottom: 8px;">📧 support@foodexpress.com</li>
+            <li style="margin-bottom: 8px;">📞 +1-555-0100</li>
+            <li style="margin-bottom: 8px;">📍 New York, NY</li>
+          </ul>
+        </div>
+      </div>
+      <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #444; color: var(--gray-light); font-size: 14px;">
+        &copy; 2024 FoodExpress. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/cart.js"></script>
+  <script>
+    // Load categories
+    function loadCategories() {
+      const categories = DB.collection('categories');
+      const grid = document.getElementById('category-grid');
+      grid.innerHTML = categories.map(cat => `
+        <div class="category-card" onclick="filterByCategory('${cat.id}')">
+          <div class="category-icon">${cat.icon}</div>
+          <div class="category-name">${cat.name}</div>
+        </div>
+      `).join('');
+    }
+
+    // Load popular restaurants
+    function loadRestaurants() {
+      const restaurants = DB.filter('restaurants', r => r.isApproved && r.isActive);
+      const grid = document.getElementById('restaurant-grid');
+      grid.innerHTML = restaurants.slice(0, 6).map(rest => `
+        <div class="restaurant-card" onclick="viewRestaurant('${rest.id}')">
+          <img src="${rest.image}" alt="${rest.name}" class="restaurant-image">
+          <div class="restaurant-info">
+            <h3 class="restaurant-name">${rest.name}</h3>
+            <div class="restaurant-meta">
+              <span class="restaurant-rating">★ ${rest.rating}</span>
+              <span>⏱ ${rest.deliveryTime}</span>
+            </div>
+            <p class="restaurant-cuisine">${rest.cuisine.join(', ')}</p>
+            <div class="restaurant-footer">
+              <span class="restaurant-delivery">${rest.priceRange}</span>
+              <span class="restaurant-fee">${rest.deliveryFee === 0 ? 'Free Delivery' : '$' + rest.deliveryFee + ' delivery'}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Search restaurants
+    function searchRestaurants() {
+      const query = document.getElementById('hero-search-input').value;
+      window.location.href = 'home.html?search=' + encodeURIComponent(query);
+    }
+
+    // Filter by category
+    function filterByCategory(categoryId) {
+      window.location.href = 'home.html?category=' + categoryId;
+    }
+
+    // View restaurant
+    function viewRestaurant(restaurantId) {
+      window.location.href = 'restaurant.html?id=' + restaurantId;
+    }
+
+    // Copy coupon code
+    function copyCode(code) {
+      navigator.clipboard.writeText(code);
+      Utils.toast('Code copied: ' + code);
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCategories();
+      loadRestaurants();
+    });
+  </script>
+</body>
+</html>

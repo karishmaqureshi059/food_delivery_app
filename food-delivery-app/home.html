@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home - FoodExpress</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="index.html" class="navbar-brand">
+        <span>🍔</span> FoodExpress
+      </a>
+      <div style="flex: 1; max-width: 500px; margin: 0 20px;">
+        <div class="hero-search" style="box-shadow: none; border: 2px solid var(--border);">
+          <input type="text" placeholder="Search restaurants or dishes..." id="search-input" onkeyup="handleSearch(event)">
+          <button onclick="performSearch()">Search</button>
+        </div>
+      </div>
+      <div class="navbar-actions">
+        <a href="cart.html" class="cart-icon">
+          🛒
+          <span class="cart-badge" id="cart-badge" style="display: none;">0</span>
+        </a>
+        <a href="orders.html" class="navbar-link">Orders</a>
+        <a href="profile.html" class="user-avatar">
+          <img src="" alt="Profile" id="user-avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Location Bar -->
+  <div style="background: white; border-bottom: 1px solid var(--border); padding: 12px 20px;">
+    <div style="max-width: 1400px; margin: 0 auto; display: flex; align-items: center; gap: 8px;">
+      <span>📍</span>
+      <span style="font-weight: 600;">Deliver to:</span>
+      <span id="current-location" style="color: var(--primary); cursor: pointer;">Set your location</span>
+    </div>
+  </div>
+
+  <!-- Categories Section -->
+  <section class="section" style="padding: 30px 20px;">
+    <div class="section-container">
+      <div class="section-header" style="text-align: left; margin-bottom: 20px;">
+        <h2 style="font-size: 24px;">Categories</h2>
+      </div>
+      <div class="category-grid" id="category-grid" style="grid-template-columns: repeat(8, 1fr);">
+        <!-- Categories loaded via JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Offers Banner -->
+  <section style="padding: 0 20px 30px;">
+    <div class="section-container">
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+        <div style="background: linear-gradient(135deg, #ff6b35, #e55a2b); border-radius: 12px; padding: 24px; color: white; cursor: pointer;" onclick="applyCoupon('WELCOME20')">
+          <h3 style="font-size: 20px; margin-bottom: 8px;">20% OFF</h3>
+          <p style="opacity: 0.9; font-size: 14px;">First order discount</p>
+          <p style="font-size: 24px; font-weight: 800; margin-top: 12px;">WELCOME20</p>
+        </div>
+        <div style="background: linear-gradient(135deg, #00b894, #00a085); border-radius: 12px; padding: 24px; color: white; cursor: pointer;" onclick="applyCoupon('FREEDELIVERY')">
+          <h3 style="font-size: 20px; margin-bottom: 8px;">Free Delivery</h3>
+          <p style="opacity: 0.9; font-size: 14px;">On orders above $25</p>
+          <p style="font-size: 24px; font-weight: 800; margin-top: 12px;">FREEDELIVERY</p>
+        </div>
+        <div style="background: linear-gradient(135deg, #6c5ce7, #5f3dc4); border-radius: 12px; padding: 24px; color: white; cursor: pointer;" onclick="applyCoupon('FLAT10')">
+          <h3 style="font-size: 20px; margin-bottom: 8px;">$10 OFF</h3>
+          <p style="opacity: 0.9; font-size: 14px;">On orders above $40</p>
+          <p style="font-size: 24px; font-weight: 800; margin-top: 12px;">FLAT10</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Popular Restaurants -->
+  <section class="section" style="padding-top: 0;">
+    <div class="section-container">
+      <div class="section-header" style="text-align: left; display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="font-size: 24px;">Popular Restaurants</h2>
+        <a href="#" style="color: var(--primary); font-weight: 600;">View All →</a>
+      </div>
+      <div class="restaurant-grid" id="restaurant-grid">
+        <!-- Restaurants loaded via JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Recommended Food -->
+  <section class="section" style="background: white;">
+    <div class="section-container">
+      <div class="section-header" style="text-align: left;">
+        <h2 style="font-size: 24px;">Recommended For You</h2>
+      </div>
+      <div class="food-grid" id="food-grid">
+        <!-- Food items loaded via JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Recently Ordered -->
+  <section class="section" id="recent-section" style="display: none;">
+    <div class="section-container">
+      <div class="section-header" style="text-align: left;">
+        <h2 style="font-size: 24px;">Recently Ordered</h2>
+      </div>
+      <div class="restaurant-grid" id="recent-grid">
+        <!-- Recent orders loaded via JS -->
+      </div>
+    </div>
+  </section>
+
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/cart.js"></script>
+  <script>
+    // Require authentication
+    Auth.requireAuth();
+
+    // Load user info
+    function loadUserInfo() {
+      const user = Auth.getCurrentUser();
+      if (user) {
+        document.getElementById('user-avatar').src = user.avatar;
+        if (user.addresses && user.addresses.length > 0) {
+          document.getElementById('current-location').textContent = user.addresses[0].label + ' - ' + user.addresses[0].street;
+        }
+      }
+    }
+
+    // Load categories
+    function loadCategories() {
+      const categories = DB.collection('categories');
+      const grid = document.getElementById('category-grid');
+      grid.innerHTML = categories.map(cat => `
+        <div class="category-card" onclick="filterByCategory('${cat.id}')" style="padding: 16px;">
+          <div class="category-icon" style="font-size: 32px;">${cat.icon}</div>
+          <div class="category-name" style="font-size: 12px;">${cat.name}</div>
+        </div>
+      `).join('');
+    }
+
+    // Load restaurants
+    function loadRestaurants(filter = {}) {
+      let restaurants = DB.filter('restaurants', r => r.isApproved && r.isActive);
+
+      if (filter.category) {
+        restaurants = restaurants.filter(r => r.categories.includes(filter.category));
+      }
+      if (filter.search) {
+        const search = filter.search.toLowerCase();
+        restaurants = restaurants.filter(r =>
+          r.name.toLowerCase().includes(search) ||
+          r.cuisine.some(c => c.toLowerCase().includes(search))
+        );
+      }
+
+      const grid = document.getElementById('restaurant-grid');
+      if (restaurants.length === 0) {
+        grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🍽️</div><h3 class="empty-state-title">No restaurants found</h3><p class="empty-state-text">Try a different search or category</p></div>';
+        return;
+      }
+
+      grid.innerHTML = restaurants.map(rest => `
+        <div class="restaurant-card" onclick="viewRestaurant('${rest.id}')">
+          <img src="${rest.image}" alt="${rest.name}" class="restaurant-image">
+          <div class="restaurant-info">
+            <h3 class="restaurant-name">${rest.name}</h3>
+            <div class="restaurant-meta">
+              <span class="restaurant-rating">★ ${rest.rating}</span>
+              <span>⏱ ${rest.deliveryTime}</span>
+              <span>${rest.priceRange}</span>
+            </div>
+            <p class="restaurant-cuisine">${rest.cuisine.join(', ')}</p>
+            <div class="restaurant-footer">
+              <span class="restaurant-delivery">${rest.address.split(',')[0]}</span>
+              <span class="restaurant-fee">${rest.deliveryFee === 0 ? 'Free Delivery' : '$' + rest.deliveryFee + ' delivery'}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Load recommended food
+    function loadRecommendedFood() {
+      const foods = DB.filter('foods', f => f.isAvailable && f.isPopular);
+      const grid = document.getElementById('food-grid');
+      grid.innerHTML = foods.slice(0, 8).map(food => {
+        const restaurant = DB.findById('restaurants', food.restaurantId);
+        return `
+          <div class="food-card" onclick="viewRestaurant('${food.restaurantId}')">
+            <img src="${food.image}" alt="${food.name}" class="food-image">
+            <div class="food-info">
+              <h3 class="food-name">${food.name}</h3>
+              <p class="food-desc">${food.description}</p>
+              <div class="food-footer">
+                <span class="food-price">$${food.price}</span>
+                <span class="food-badge ${food.isVeg ? 'veg-badge' : 'nonveg-badge'}">${food.isVeg ? 'Veg' : 'Non-Veg'}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Load recently ordered
+    function loadRecentlyOrdered() {
+      const user = Auth.getCurrentUser();
+      const orders = DB.filter('orders', o => o.userId === user.id && o.status === 'delivered');
+      const section = document.getElementById('recent-section');
+      const grid = document.getElementById('recent-grid');
+
+      if (orders.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+
+      section.style.display = 'block';
+      const recentRestaurants = [...new Set(orders.map(o => o.restaurantId))].slice(0, 4);
+      grid.innerHTML = recentRestaurants.map(restId => {
+        const rest = DB.findById('restaurants', restId);
+        return `
+          <div class="restaurant-card" onclick="viewRestaurant('${rest.id}')">
+            <img src="${rest.image}" alt="${rest.name}" class="restaurant-image">
+            <div class="restaurant-info">
+              <h3 class="restaurant-name">${rest.name}</h3>
+              <p class="restaurant-cuisine">${rest.cuisine.join(', ')}</p>
+              <button class="btn btn-primary btn-sm mt-2" onclick="event.stopPropagation(); reorder('${rest.id}')">Reorder</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Search functionality
+    function handleSearch(e) {
+      if (e.key === 'Enter') {
+        performSearch();
+      }
+    }
+
+    function performSearch() {
+      const query = document.getElementById('search-input').value;
+      loadRestaurants({ search: query });
+    }
+
+    // Filter by category
+    function filterByCategory(categoryId) {
+      loadRestaurants({ category: categoryId });
+    }
+
+    // View restaurant
+    function viewRestaurant(restaurantId) {
+      window.location.href = 'restaurant.html?id=' + restaurantId;
+    }
+
+    // Reorder
+    function reorder(restaurantId) {
+      window.location.href = 'restaurant.html?id=' + restaurantId;
+    }
+
+    // Apply coupon
+    function applyCoupon(code) {
+      Utils.toast('Coupon ' + code + ' applied! Add items to cart to use it.');
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      loadUserInfo();
+      loadCategories();
+      loadRestaurants();
+      loadRecommendedFood();
+      loadRecentlyOrdered();
+      Cart.updateCartBadge();
+
+      // Check for search query in URL
+      const searchQuery = Utils.getQueryParam('search');
+      const categoryId = Utils.getQueryParam('category');
+      if (searchQuery) {
+        document.getElementById('search-input').value = searchQuery;
+        loadRestaurants({ search: searchQuery });
+      } else if (categoryId) {
+        loadRestaurants({ category: categoryId });
+      }
+    });
+  </script>
+</body>
+</html>

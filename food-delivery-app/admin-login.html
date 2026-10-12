@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login - FoodExpress</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .auth-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #2d3436 0%, #636e72 100%);
+      padding: 20px;
+    }
+    .auth-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 450px;
+      padding: 40px;
+    }
+    .auth-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .auth-logo {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+    .auth-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--dark);
+    }
+    .auth-subtitle {
+      color: var(--gray);
+      margin-top: 8px;
+    }
+    .captcha-box {
+      background: var(--light);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .captcha-code {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 8px;
+      color: var(--primary);
+      text-decoration: line-through;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-logo">⚙️</div>
+        <h1 class="auth-title">Admin Panel</h1>
+        <p class="auth-subtitle">Sign in to manage your platform</p>
+      </div>
+
+      <form onsubmit="handleAdminLogin(event)">
+        <div class="form-group">
+          <label class="form-label">Admin Email</label>
+          <input type="email" class="form-input" id="admin-email" placeholder="admin@fooddelivery.com" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-input" id="admin-password" placeholder="Enter password" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">CAPTCHA</label>
+          <div class="captcha-box">
+            <span class="captcha-code" id="captcha-display"></span>
+          </div>
+          <input type="text" class="form-input" id="captcha-input" placeholder="Enter captcha code" required>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="remember-me"> Remember me
+          </label>
+          <a href="#" style="color: var(--primary); font-weight: 600; font-size: 14px;">Forgot Password?</a>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg">Sign In</button>
+      </form>
+
+      <div style="text-align: center; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+        <p style="color: var(--gray);">Default: admin@fooddelivery.com / admin123</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    Auth.redirectIfAdminLoggedIn();
+
+    let captchaCode = '';
+
+    function generateCaptcha() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      captchaCode = '';
+      for (let i = 0; i < 6; i++) {
+        captchaCode += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      document.getElementById('captcha-display').textContent = captchaCode;
+    }
+
+    function handleAdminLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('admin-email').value;
+      const password = document.getElementById('admin-password').value;
+      const captcha = document.getElementById('captcha-input').value.toUpperCase();
+
+      if (captcha !== captchaCode) {
+        Utils.toast('Invalid CAPTCHA', 'error');
+        generateCaptcha();
+        return;
+      }
+
+      const result = Auth.adminLogin(email, password);
+      if (result.success) {
+        Utils.toast('Welcome back, Admin!');
+        setTimeout(() => window.location.href = 'admin-dashboard.html', 1000);
+      } else {
+        Utils.toast(result.message, 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', generateCaptcha);
+  </script>
+</body>
+</html>

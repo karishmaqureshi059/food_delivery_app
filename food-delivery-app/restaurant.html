@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Restaurant - FoodExpress</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .restaurant-hero {
+      position: relative;
+      height: 300px;
+      overflow: hidden;
+    }
+    .restaurant-hero img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .restaurant-hero-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+      padding: 40px 20px 20px;
+      color: white;
+    }
+    .menu-category {
+      position: sticky;
+      top: 70px;
+      background: white;
+      border-right: 1px solid var(--border);
+      height: calc(100vh - 70px);
+      overflow-y: auto;
+    }
+    .menu-category-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: var(--transition);
+    }
+    .menu-category-item:hover, .menu-category-item.active {
+      background: var(--primary-light);
+      border-left-color: var(--primary);
+    }
+    .menu-item {
+      display: flex;
+      gap: 16px;
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .menu-item-image {
+      width: 120px;
+      height: 120px;
+      border-radius: 12px;
+      object-fit: cover;
+    }
+    .menu-item-info {
+      flex: 1;
+    }
+    .menu-item-name {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .menu-item-desc {
+      font-size: 13px;
+      color: var(--gray);
+      margin-bottom: 12px;
+    }
+    .menu-item-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .menu-item-price {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+    .favorite-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: white;
+      border: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 20px;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+    }
+    .favorite-btn:hover {
+      transform: scale(1.1);
+    }
+    .favorite-btn.active {
+      color: var(--danger);
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="index.html" class="navbar-brand">
+        <span>🍔</span> FoodExpress
+      </a>
+      <div class="navbar-actions">
+        <a href="cart.html" class="cart-icon">
+          🛒
+          <span class="cart-badge" id="cart-badge" style="display: none;">0</span>
+        </a>
+        <a href="profile.html" class="user-avatar">
+          <img src="" alt="Profile" id="user-avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Restaurant Hero -->
+  <div class="restaurant-hero">
+    <img src="" alt="Restaurant" id="restaurant-cover">
+    <button class="favorite-btn" id="favorite-btn" onclick="toggleFavorite()">♡</button>
+    <div class="restaurant-hero-overlay">
+      <h1 id="restaurant-name" style="font-size: 32px; font-weight: 800;"></h1>
+      <p id="restaurant-cuisine" style="opacity: 0.9;"></p>
+    </div>
+  </div>
+
+  <!-- Restaurant Info -->
+  <div style="background: white; border-bottom: 1px solid var(--border); padding: 16px 20px;">
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; gap: 30px; align-items: center; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="background: var(--success); color: white; padding: 4px 10px; border-radius: 6px; font-weight: 700;" id="restaurant-rating"></span>
+        <span style="color: var(--gray); font-size: 14px;" id="restaurant-reviews"></span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span>⏱</span>
+        <span id="restaurant-time" style="font-weight: 600;"></span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span>💰</span>
+        <span id="restaurant-price" style="font-weight: 600;"></span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span>📍</span>
+        <span id="restaurant-address" style="color: var(--gray);"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menu Section -->
+  <div style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+    <div style="display: grid; grid-template-columns: 250px 1fr; gap: 24px;">
+      <!-- Category Sidebar -->
+      <div class="menu-category">
+        <div id="category-list">
+          <!-- Categories loaded via JS -->
+        </div>
+      </div>
+
+      <!-- Menu Items -->
+      <div id="menu-items">
+        <!-- Menu items loaded via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Customize Modal -->
+  <div class="modal-overlay" id="customize-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-food-name">Customize</h3>
+        <button class="modal-close" onclick="closeCustomizeModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-customizations">
+        <!-- Customizations loaded via JS -->
+      </div>
+      <div class="modal-footer">
+        <div style="display: flex; align-items: center; gap: 16px; width: 100%; justify-content: space-between;">
+          <div class="quantity-control">
+            <button class="quantity-btn" onclick="updateModalQuantity(-1)">-</button>
+            <span class="quantity-value" id="modal-quantity">1</span>
+            <button class="quantity-btn" onclick="updateModalQuantity(1)">+</button>
+          </div>
+          <button class="btn btn-primary" onclick="confirmAddToCart()">Add to Cart - $<span id="modal-total">0</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/cart.js"></script>
+  <script>
+    let currentRestaurant = null;
+    let currentFood = null;
+    let modalQuantity = 1;
+    let selectedCustomizations = [];
+
+    // Require authentication
+    Auth.requireAuth();
+
+    // Load restaurant data
+    function loadRestaurant() {
+      const restaurantId = Utils.getQueryParam('id');
+      if (!restaurantId) {
+        window.location.href = 'home.html';
+        return;
+      }
+
+      currentRestaurant = DB.findById('restaurants', restaurantId);
+      if (!currentRestaurant) {
+        window.location.href = 'home.html';
+        return;
+      }
+
+      // Update UI
+      document.getElementById('restaurant-cover').src = currentRestaurant.coverImage;
+      document.getElementById('restaurant-name').textContent = currentRestaurant.name;
+      document.getElementById('restaurant-cuisine').textContent = currentRestaurant.cuisine.join(', ');
+      document.getElementById('restaurant-rating').textContent = '★ ' + currentRestaurant.rating;
+      document.getElementById('restaurant-reviews').textContent = '(' + currentRestaurant.reviewCount + ' reviews)';
+      document.getElementById('restaurant-time').textContent = currentRestaurant.deliveryTime;
+      document.getElementById('restaurant-price').textContent = currentRestaurant.priceRange + ' | $' + currentRestaurant.minOrder + ' min order';
+      document.getElementById('restaurant-address').textContent = currentRestaurant.address;
+
+      // Check favorite
+      const user = Auth.getCurrentUser();
+      if (user && user.favorites && user.favorites.includes(restaurantId)) {
+        document.getElementById('favorite-btn').textContent = '♥';
+        document.getElementById('favorite-btn').classList.add('active');
+      }
+
+      loadMenuCategories();
+      loadMenuItems();
+    }
+
+    // Load menu categories
+    function loadMenuCategories() {
+      const categories = DB.collection('categories');
+      const restaurantCats = currentRestaurant.categories;
+      const list = document.getElementById('category-list');
+
+      list.innerHTML = categories
+        .filter(cat => restaurantCats.includes(cat.id))
+        .map((cat, index) => `
+          <div class="menu-category-item ${index === 0 ? 'active' : ''}" onclick="scrollToCategory('${cat.id}')">
+            ${cat.icon} ${cat.name}
+          </div>
+        `).join('');
+    }
+
+    // Load menu items
+    function loadMenuItems() {
+      const foods = DB.filter('foods', f => f.restaurantId === currentRestaurant.id && f.isAvailable);
+      const container = document.getElementById('menu-items');
+
+      if (foods.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🍽️</div><h3 class="empty-state-title">No items available</h3></div>';
+        return;
+      }
+
+      // Group by category
+      const categories = DB.collection('categories');
+      const grouped = {};
+      foods.forEach(food => {
+        if (!grouped[food.category]) grouped[food.category] = [];
+        grouped[food.category].push(food);
+      });
+
+      let html = '';
+      categories.forEach(cat => {
+        if (grouped[cat.id]) {
+          html += `<h3 id="cat-${cat.id}" style="margin: 24px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary);">${cat.icon} ${cat.name}</h3>`;
+          html += grouped[cat.id].map(food => `
+            <div class="menu-item">
+              <img src="${food.image}" alt="${food.name}" class="menu-item-image">
+              <div class="menu-item-info">
+                <h4 class="menu-item-name">${food.name}</h4>
+                <p class="menu-item-desc">${food.description}</p>
+                <div class="menu-item-footer">
+                  <span class="menu-item-price">$${food.price}</span>
+                  <span class="food-badge ${food.isVeg ? 'veg-badge' : 'nonveg-badge'}">${food.isVeg ? 'Veg' : 'Non-Veg'}</span>
+                </div>
+              </div>
+              <button class="btn btn-primary btn-sm" style="align-self: center;" onclick="openCustomizeModal('${food.id}')">Add</button>
+            </div>
+          `).join('');
+        }
+      });
+
+      container.innerHTML = html;
+    }
+
+    // Scroll to category
+    function scrollToCategory(catId) {
+      const element = document.getElementById('cat-' + catId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    // Toggle favorite
+    function toggleFavorite() {
+      const user = Auth.getCurrentUser();
+      if (!user) return;
+
+      const btn = document.getElementById('favorite-btn');
+      const isFav = user.favorites && user.favorites.includes(currentRestaurant.id);
+
+      if (isFav) {
+        user.favorites = user.favorites.filter(id => id !== currentRestaurant.id);
+        btn.textContent = '♡';
+        btn.classList.remove('active');
+        Utils.toast('Removed from favorites');
+      } else {
+        if (!user.favorites) user.favorites = [];
+        user.favorites.push(currentRestaurant.id);
+        btn.textContent = '♥';
+        btn.classList.add('active');
+        Utils.toast('Added to favorites!');
+      }
+
+      DB.update('users', user.id, { favorites: user.favorites });
+    }
+
+    // Open customize modal
+    function openCustomizeModal(foodId) {
+      currentFood = DB.findById('foods', foodId);
+      if (!currentFood) return;
+
+      modalQuantity = 1;
+      selectedCustomizations = [];
+
+      document.getElementById('modal-food-name').textContent = currentFood.name;
+      document.getElementById('modal-quantity').textContent = modalQuantity;
+
+      const container = document.getElementById('modal-customizations');
+      if (currentFood.customization && currentFood.customization.length > 0) {
+        container.innerHTML = currentFood.customization.map((cust, idx) => `
+          <div style="margin-bottom: 20px;">
+            <h4 style="margin-bottom: 12px;">${cust.name}</h4>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              ${cust.options.map((opt, optIdx) => `
+                <label style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer;" onclick="selectCustomization(${idx}, ${optIdx})">
+                  <input type="radio" name="custom-${idx}" ${optIdx === 0 ? 'checked' : ''}>
+                  <span style="flex: 1;">${opt.label}</span>
+                  <span style="font-weight: 600; color: var(--primary);">${opt.price > 0 ? '+$' + opt.price : 'Free'}</span>
+                </label>
+              `).join('')}
+            </div>
+          </div>
+        `).join('');
+      } else {
+        container.innerHTML = '<p style="color: var(--gray); text-align: center;">No customization options available</p>';
+      }
+
+      updateModalTotal();
+      Utils.showModal('customize-modal');
+    }
+
+    // Select customization
+    function selectCustomization(custIdx, optIdx) {
+      const cust = currentFood.customization[custIdx];
+      const opt = cust.options[optIdx];
+      selectedCustomizations[custIdx] = { name: cust.name, selected: opt.label, price: opt.price };
+      updateModalTotal();
+    }
+
+    // Update modal quantity
+    function updateModalQuantity(change) {
+      modalQuantity = Math.max(1, modalQuantity + change);
+      document.getElementById('modal-quantity').textContent = modalQuantity;
+      updateModalTotal();
+    }
+
+    // Update modal total
+    function updateModalTotal() {
+      let total = currentFood.price;
+      selectedCustomizations.forEach(c => {
+        if (c && c.price) total += c.price;
+      });
+      total *= modalQuantity;
+      document.getElementById('modal-total').textContent = total.toFixed(2);
+    }
+
+    // Confirm add to cart
+    function confirmAddToCart() {
+      const customizations = selectedCustomizations.filter(c => c !== undefined);
+      Cart.addItem(currentFood, modalQuantity, customizations);
+      closeCustomizeModal();
+    }
+
+    // Close customize modal
+    function closeCustomizeModal() {
+      Utils.hideModal('customize-modal');
+      currentFood = null;
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      loadRestaurant();
+      Cart.updateCartBadge();
+
+      const user = Auth.getCurrentUser();
+      if (user) {
+        document.getElementById('user-avatar').src = user.avatar;
+      }
+    });
+  </script>
+</body>
+</html>
